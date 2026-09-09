@@ -88,13 +88,20 @@
       color: #1d1d1f;
       word-break: break-word;
     }
+
+    /* 上部4択エリアとオーバーレイの親容器 */
+    .main-options-wrapper {
+      position: relative;
+      margin-bottom: 14px;
+    }
     
     /* 2列の選択肢グリッドレイアウト */
-    .options {
+    .main-options, .sub-options {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
     }
+
     button.opt-btn {
       border-radius: 14px;
       font-weight: bold;
@@ -131,26 +138,41 @@
     }
     button.sub-opt:active { background: #ebebeb; }
     
-    /* 正解・不正解結果エリア（「この中にはない」の選択時のみ中央に表示） */
-    .result {
-      margin-top: 24px;
-      padding: 18px;
-      border-radius: 12px;
-      display: none;
-      line-height: 1.5;
-      font-size: 18px;
+    /* 4択部分に被せる結果表示オーバーレイ */
+    .overlay-result {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       text-align: center;
+      padding: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+      z-index: 10;
+      backdrop-filter: blur(4px);
     }
-    .correct { background: #d4edda; color: #155724; }
-    .incorrect { background: #f8d7da; color: #721c24; }
+    .overlay-result.correct {
+      background: rgba(240, 255, 244, 0.96);
+      border: 2px solid #28a745;
+      color: #155724;
+    }
+    .overlay-result.incorrect {
+      background: rgba(255, 245, 245, 0.96);
+      border: 2px solid #dc3545;
+      color: #721c24;
+    }
 
     /* 正解テキストの強調スタイル */
     .ans-highlight {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: bold;
       display: inline-block;
       margin: 4px 2px;
-      text-decoration: none;
     }
     
     .btn-group { display: flex; gap: 12px; margin-top: 18px; }
@@ -308,8 +330,16 @@
       <span id="quiz-mode-text" style="font-weight: bold; color: #007aff;">通常モード</span>
     </div>
     <div class="question" id="question">問題文がここに入ります</div>
-    <div class="options" id="options"></div>
-    <div class="result" id="result"></div>
+    
+    <!-- 4択エリアと結果オーバーレイの容器 -->
+    <div class="main-options-wrapper">
+      <div class="main-options" id="main-options"></div>
+      <div class="overlay-result" id="overlay-result" style="display: none;"></div>
+    </div>
+    
+    <!-- 下部補助選択肢エリア -->
+    <div class="sub-options" id="sub-options"></div>
+
     <button class="primary-btn" id="next-btn" style="display:none; width:100%; margin-top:20px;" onclick="nextQuestion()">次の問題へ</button>
     
     <!-- 中断ボタン -->
@@ -537,7 +567,7 @@
   }
 
   function loadQuestion() {
-    document.getElementById('result').style.display = 'none';
+    document.getElementById('overlay-result').style.display = 'none';
     document.getElementById('next-btn').style.display = 'none';
 
     const qTotal = sessionQuestions.length;
@@ -572,8 +602,10 @@
       topFourOpts = shuffle([targetAns, ...chosenDummies]);
     }
 
-    const optsDiv = document.getElementById('options');
-    optsDiv.innerHTML = '';
+    const mainOptsDiv = document.getElementById('main-options');
+    const subOptsDiv = document.getElementById('sub-options');
+    mainOptsDiv.innerHTML = '';
+    subOptsDiv.innerHTML = '';
     
     // 上部4択
     topFourOpts.forEach(opt => {
@@ -581,7 +613,7 @@
       btn.className = 'opt-btn main-opt';
       btn.textContent = opt;
       btn.onclick = () => checkAnswer(opt);
-      optsDiv.appendChild(btn);
+      mainOptsDiv.appendChild(btn);
     });
 
     // 下部補助ボタン
@@ -589,13 +621,13 @@
     dontKnowBtn.className = 'opt-btn sub-opt';
     dontKnowBtn.textContent = 'わからない';
     dontKnowBtn.onclick = () => checkAnswer('わからない');
-    optsDiv.appendChild(dontKnowBtn);
+    subOptsDiv.appendChild(dontKnowBtn);
 
     const noneBtn = document.createElement('button');
     noneBtn.className = 'opt-btn sub-opt';
     noneBtn.textContent = 'この中にはない';
     noneBtn.onclick = () => checkAnswer('この中にはない');
-    optsDiv.appendChild(noneBtn);
+    subOptsDiv.appendChild(noneBtn);
   }
 
   function checkAnswer(selected) {
@@ -615,33 +647,36 @@
       isCorrect: isCorrect
     });
 
-    const resultDiv = document.getElementById('result');
+    const overlayDiv = document.getElementById('overlay-result');
 
-    // 「この中にはない」を選択した場合のみ正解・不正解表示エリアを有効化
+    // 「この中にはない」を選択した場合のみ、4択エリアに被せる形で正解/不正解を表示
     if (selected === 'この中にはない') {
-      resultDiv.style.display = 'block';
-      resultDiv.className = 'result ' + (isCorrect ? 'correct' : 'incorrect');
+      overlayDiv.style.display = 'flex';
+      overlayDiv.className = 'overlay-result ' + (isCorrect ? 'correct' : 'incorrect');
       
       let resultHTML = `<div style="font-size: 22px; font-weight: bold; margin-bottom: 6px;">${isCorrect ? '⭕ 正解！' : '❌ 不正解...'}</div>`;
       
       if (isCorrect) {
-        resultHTML += `<div>本当の正解は「<span class="ans-highlight">${realAns}</span>」です。</div>`;
+        resultHTML += `<div style="font-size: 16px;">本当の正解は「<span class="ans-highlight">${realAns}</span>」です。</div>`;
       } else {
-        resultHTML += `<div>正解は「<span class="ans-highlight">${currentCorrectAnswer}</span>」です。</div>`;
+        resultHTML += `<div style="font-size: 16px;">正解は「<span class="ans-highlight">${currentCorrectAnswer}</span>」です。</div>`;
       }
 
       if (currentQ.exp) {
-        resultHTML += `<div style="margin-top: 8px;">${currentQ.exp}</div>`;
+        resultHTML += `<div style="margin-top: 8px; font-size: 14px; color: #555;">${currentQ.exp}</div>`;
       }
 
-      resultDiv.innerHTML = resultHTML;
+      overlayDiv.innerHTML = resultHTML;
     } else {
-      resultDiv.style.display = 'none';
+      overlayDiv.style.display = 'none';
     }
 
     // 回答後の各選択肢ボタンの表示制御
-    const btns = document.getElementById('options').getElementsByTagName('button');
-    for (let btn of btns) {
+    const mainBtns = document.getElementById('main-options').getElementsByTagName('button');
+    const subBtns = document.getElementById('sub-options').getElementsByTagName('button');
+    const allBtns = [...mainBtns, ...subBtns];
+
+    for (let btn of allBtns) {
       btn.disabled = true;
       const isThisBtnCorrect = (btn.textContent === currentCorrectAnswer);
 
