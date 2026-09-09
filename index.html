@@ -11,88 +11,217 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: #f5f5f7;
       margin: 0;
-      padding: 20px;
+      padding: 16px;
       display: flex;
       justify-content: center;
     }
     .card {
       background: white;
       border-radius: 16px;
-      padding: 24px;
+      padding: 20px;
       max-width: 500px;
       width: 100%;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    .stats { color: #666; font-size: 14px; margin-bottom: 12px; }
-    .question { font-size: 20px; font-weight: bold; margin-bottom: 20px; }
-    .options { display: flex; flex-direction: column; gap: 10px; }
-    button {
-      padding: 14px;
-      font-size: 16px;
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .stats { color: #666; font-size: 14px; }
+    .mode-btn {
+      background: #e9e9eb;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 14px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .question { font-size: 18px; font-weight: bold; margin-bottom: 16px; }
+    .options { display: flex; flex-direction: column; gap: 8px; }
+    button.opt-btn {
+      padding: 12px;
+      font-size: 15px;
       border: 1px solid #ddd;
       border-radius: 10px;
       background: #f8f9fa;
       cursor: pointer;
       text-align: left;
     }
-    button:active { background: #e2e8f0; }
-    .result { margin-top: 20px; padding: 12px; border-radius: 8px; display: none; }
+    button.opt-btn:active { background: #e2e8f0; }
+    .result { margin-top: 16px; padding: 12px; border-radius: 8px; display: none; }
     .correct { background: #d4edda; color: #155724; }
     .incorrect { background: #f8d7da; color: #721c24; }
-    .next-btn {
-      margin-top: 16px;
-      width: 100%;
+    
+    /* ボタン用スタイル */
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .primary-btn {
+      flex: 2;
       background: #007aff;
       color: white;
       text-align: center;
       font-weight: bold;
       border: none;
-      display: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .danger-btn {
+      flex: 1;
+      background: #ff3b30;
+      color: white;
+      text-align: center;
+      font-weight: bold;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 13px;
+      font-family: monospace;
+      margin-bottom: 4px;
+    }
+    .format-info {
+      font-size: 12px;
+      color: #666;
+      background: #f0f0f5;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <div class="stats" id="stats">出題準備中...</div>
-  <div class="question" id="question">問題文がここに入ります</div>
-  <div class="options" id="options"></div>
-  <div class="result" id="result"></div>
-  <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題へ</button>
+  <div class="header">
+    <div class="stats" id="stats">出題準備中...</div>
+    <button class="mode-btn" id="toggle-mode-btn" onclick="toggleMode()">⚙️ 問題の編集</button>
+  </div>
+
+  <!-- クイズ画面 -->
+  <div id="quiz-view">
+    <div class="question" id="question">問題文がここに入ります</div>
+    <div class="options" id="options"></div>
+    <div class="result" id="result"></div>
+    <button class="primary-btn" id="next-btn" style="display:none; width:100%; margin-top:16px;" onclick="nextQuestion()">次の問題へ</button>
+  </div>
+
+  <!-- 問題入力・編集画面 -->
+  <div id="edit-view" style="display: none;">
+    <div class="format-info">
+      <strong>【入力フォーマット】</strong><br>
+      1行に1問ずつ、カンマ（,）またはタブで区切って入力してください。<br>
+      <code>問題文, 選択肢1, 選択肢2, 選択肢3, 選択肢4, 正解の文字, 解説</code>
+    </div>
+    <textarea id="data-input" placeholder="ここにテキストを貼り付けてください"></textarea>
+    
+    <div class="btn-group">
+      <button class="primary-btn" onclick="saveQuestions()">保存して変更</button>
+      <button class="danger-btn" onclick="clearAllData()">全消去</button>
+    </div>
+  </div>
 </div>
 
 <script>
-  // ★ここに好きな問題を追加・編集できます★
-  const questions = [
-    {
-      q: "日本の首都はどこでしょう？",
-      opts: ["大阪", "東京", "京都", "福岡"],
-      ans: "東京",
-      exp: "1868年に東京と改称され、事実上の首都となりました。"
-    },
-    {
-      q: "「Apple」の意味は？",
-      opts: ["みかん", "ぶどう", "りんご", "バナナ"],
-      ans: "りんご",
-      exp: "バラ科リンゴ属の果実です。"
-    },
-    {
-      q: "太陽系で最も大きい惑星は？",
-      opts: ["火星", "木星", "土星", "海王星"],
-      ans: "木星",
-      exp: "直径は地球の約11倍あります。"
-    }
-  ];
+  const defaultCSV = `日本の首都は？,大阪,東京,京都,福岡,東京,1868年に東京へ改称されました。
+「Apple」の意味は？,みかん,ぶどう,りんご,バナナ,りんご,バラ科リンゴ属の果実です。
+太陽系で最も大きい惑星は？,火星,木星,土星,海王星,木星,直径は地球の約11倍あります。`;
 
+  let questions = [];
   let currentQ = null;
   let totalCount = 0;
   let correctCount = 0;
+  let isEditMode = false;
+
+  function init() {
+    const savedData = localStorage.getItem('user_quiz_data');
+    const initialData = savedData !== null ? savedData : defaultCSV;
+    document.getElementById('data-input').value = initialData;
+    parseAndSetQuestions(initialData);
+    loadQuestion();
+  }
+
+  function parseAndSetQuestions(text) {
+    const lines = text.trim().split('\n');
+    questions = [];
+
+    lines.forEach(line => {
+      if (!line.trim()) return;
+      const cols = line.includes('\t') ? line.split('\t') : line.split(',');
+      
+      if (cols.length >= 6) {
+        const q = cols[0].trim();
+        const opts = [cols[1].trim(), cols[2].trim(), cols[3].trim(), cols[4].trim()];
+        const ans = cols[5].trim();
+        const exp = cols[6] ? cols[6].trim() : "解説はありません。";
+
+        questions.push({ q, opts, ans, exp });
+      }
+    });
+  }
+
+  function toggleMode() {
+    isEditMode = !isEditMode;
+    document.getElementById('quiz-view').style.display = isEditMode ? 'none' : 'block';
+    document.getElementById('edit-view').style.display = isEditMode ? 'block' : 'none';
+    document.getElementById('toggle-mode-btn').textContent = isEditMode ? '✕ クイズに戻る' : '⚙️ 問題の編集';
+  }
+
+  function saveQuestions() {
+    const rawText = document.getElementById('data-input').value;
+    parseAndSetQuestions(rawText);
+
+    if (questions.length > 0) {
+      localStorage.setItem('user_quiz_data', rawText);
+      totalCount = 0;
+      correctCount = 0;
+      toggleMode();
+      loadQuestion();
+    } else {
+      alert("有効な問題データがありません。正しいフォーマットで入力してください。");
+    }
+  }
+
+  // ★全消去機能
+  function clearAllData() {
+    if (confirm("登録されている問題をすべて消去しますか？")) {
+      localStorage.removeItem('user_quiz_data');
+      document.getElementById('data-input').value = '';
+      questions = [];
+      alert("すべてのデータを消去しました。新しい問題を登録してください。");
+    }
+  }
 
   function loadQuestion() {
+    if (questions.length === 0) {
+      document.getElementById('question').textContent = "問題が登録されていません。「⚙️ 問題の編集」から問題を追加してください。";
+      document.getElementById('options').innerHTML = '';
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('next-btn').style.display = 'none';
+      updateStats();
+      return;
+    }
+
     document.getElementById('result').style.display = 'none';
     document.getElementById('next-btn').style.display = 'none';
     
-    // ランダムに1問選択
     const randomIndex = Math.floor(Math.random() * questions.length);
     currentQ = questions[randomIndex];
 
@@ -103,6 +232,7 @@
     
     currentQ.opts.forEach(opt => {
       const btn = document.createElement('button');
+      btn.className = 'opt-btn';
       btn.textContent = opt;
       btn.onclick = () => checkAnswer(opt);
       optsDiv.appendChild(btn);
@@ -121,7 +251,6 @@
     resultDiv.className = 'result ' + (isCorrect ? 'correct' : 'incorrect');
     resultDiv.innerHTML = `<strong>${isCorrect ? '正解！' : '不正解...'}</strong><br>${currentQ.exp}`;
 
-    // 選択肢ボタンを無効化
     const btns = document.getElementById('options').getElementsByTagName('button');
     for (let btn of btns) btn.disabled = true;
 
@@ -134,13 +263,11 @@
   }
 
   function updateStats() {
-    document.getElementById('stats').textContent = `解答数: ${totalCount} | 正解数: ${correctCount}`;
+    document.getElementById('stats').textContent = `問題数: ${questions.length}問 | 正解: ${correctCount}/${totalCount}`;
   }
 
-  // 初回読み込み
-  loadQuestion();
+  init();
 
-  // PWA用のService Worker登録
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
   }
