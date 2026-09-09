@@ -96,6 +96,15 @@
     .result { margin-top: 24px; padding: 18px; border-radius: 12px; display: none; line-height: 1.5; font-size: 18px; }
     .correct { background: #d4edda; color: #155724; }
     .incorrect { background: #f8d7da; color: #721c24; }
+
+    /* 正解テキストの強調スタイル */
+    .ans-highlight {
+      font-size: 28px;
+      font-weight: bold;
+      display: inline-block;
+      margin: 4px 2px;
+      text-decoration: underline;
+    }
     
     .btn-group { display: flex; gap: 12px; margin-top: 18px; }
     .primary-btn {
@@ -531,26 +540,26 @@
     resultDiv.style.display = 'block';
     resultDiv.className = 'result ' + (isCorrect ? 'correct' : 'incorrect');
     
-    let resultHTML = `<strong>${isCorrect ? '⭕ 正解！' : '❌ 不正解...'}</strong>`;
+    let resultHTML = `<div style="font-size: 22px; font-weight: bold; margin-bottom: 6px;">${isCorrect ? '⭕ 正解！' : '❌ 不正解...'}</div>`;
     
     if (selected === 'わからない') {
-      resultHTML += `<br>正解は「<strong>${realAns}</strong>」です。`;
+      resultHTML += `<div>正解は「<span class="ans-highlight">${realAns}</span>」です。</div>`;
     } else if (selected === 'この中にはない') {
       if (isCorrect) {
-        resultHTML += `<br>本当の正解は「<strong>${realAns}</strong>」です。`;
+        resultHTML += `<div>本当の正解は「<span class="ans-highlight">${realAns}</span>」です。</div>`;
       } else {
-        resultHTML += `<br>正解は「<strong>${currentCorrectAnswer}</strong>」です。`;
+        resultHTML += `<div>正解は「<span class="ans-highlight">${currentCorrectAnswer}</span>」です。</div>`;
       }
     } else if (!isCorrect) {
       if (currentCorrectAnswer === "この中にはない") {
-        resultHTML += `<br>本当の正解は「<strong>${realAns}</strong>」です。`;
+        resultHTML += `<div>本当の正解は「<span class="ans-highlight">${realAns}</span>」です。</div>`;
       } else {
-        resultHTML += `<br>正解は「<strong>${currentCorrectAnswer}</strong>」です。`;
+        resultHTML += `<div>正解は「<span class="ans-highlight">${currentCorrectAnswer}</span>」です。</div>`;
       }
     }
 
     if (currentQ.exp) {
-      resultHTML += `<br>${currentQ.exp}`;
+      resultHTML += `<div style="margin-top: 8px;">${currentQ.exp}</div>`;
     }
 
     resultDiv.innerHTML = resultHTML;
@@ -652,7 +661,7 @@
       
       let detailText = `あなたの選択: <strong>${item.selected}</strong>`;
       if (!item.isCorrect) {
-        detailText += `<br>正解: <strong style="color:#d9534f;">${item.correctAnswer === "この中にはない" ? item.realAns : item.correctAnswer}</strong>`;
+        detailText += `<br>正解: <span class="ans-highlight" style="font-size:22px; color:#d9534f;">${item.correctAnswer === "この中にはない" ? item.realAns : item.correctAnswer}</span>`;
       }
 
       let expHTML = item.exp ? `<div class="history-exp">${item.exp}</div>` : '';
