@@ -54,7 +54,6 @@
     .correct { background: #d4edda; color: #155724; }
     .incorrect { background: #f8d7da; color: #721c24; }
     
-    /* ボタン用スタイル */
     .btn-group {
       display: flex;
       gap: 8px;
@@ -128,7 +127,9 @@
     <div class="format-info">
       <strong>【入力フォーマット】</strong><br>
       1行に1問ずつ、カンマ（,）またはタブで区切って入力してください。<br>
-      <code>問題文, 選択肢1, 選択肢2, 選択肢3, 選択肢4, 正解の文字, 解説</code>
+      <code>問題文, 選択肢1, 選択肢2, 選択肢3, 選択肢4, 正解の文字, 解説</code><br>
+      ※「この中にはない」は自動で最後に5番目の選択肢として追加されます。<br>
+      ※選択肢1〜4の中に正解がない場合は、正解の欄に「この中にはない」と記述してください。
     </div>
     <textarea id="data-input" placeholder="ここにテキストを貼り付けてください"></textarea>
     
@@ -140,9 +141,11 @@
 </div>
 
 <script>
-  const defaultCSV = `日本の首都は？,大阪,東京,京都,福岡,東京,1868年に東京へ改称されました。
+  // 初期サンプル問題
+  const defaultCSV = `日本の首都は？,大阪,名古屋,京都,福岡,東京,正解は「東京」のため、選択肢1〜4には存在しません。
 「Apple」の意味は？,みかん,ぶどう,りんご,バナナ,りんご,バラ科リンゴ属の果実です。
-太陽系で最も大きい惑星は？,火星,木星,土星,海王星,木星,直径は地球の約11倍あります。`;
+太陽系で最も大きい惑星は？,火星,木星,土星,海王星,木星,直径は地球の約11倍あります。
+徳川家康が開いた幕府は？,鎌倉幕府,室町幕府,仙台幕府,長崎幕府,この中にはない,正解は「江戸幕府」です。`;
 
   let questions = [];
   let currentQ = null;
@@ -199,7 +202,6 @@
     }
   }
 
-  // ★全消去機能
   function clearAllData() {
     if (confirm("登録されている問題をすべて消去しますか？")) {
       localStorage.removeItem('user_quiz_data');
@@ -230,7 +232,13 @@
     const optsDiv = document.getElementById('options');
     optsDiv.innerHTML = '';
     
-    currentQ.opts.forEach(opt => {
+    // 入力された選択肢 + 自動追加の「この中にはない」
+    const displayOpts = [...currentQ.opts];
+    if (!displayOpts.includes("この中にはない")) {
+      displayOpts.push("この中にはない");
+    }
+
+    displayOpts.forEach(opt => {
       const btn = document.createElement('button');
       btn.className = 'opt-btn';
       btn.textContent = opt;
