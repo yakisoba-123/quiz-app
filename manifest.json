@@ -1,0 +1,15 @@
+{
+  "name": "ランダム問題集",
+  "short_name": "問題集",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5f5f7",
+  "theme_color": "#4A90E2",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192/007aff/ffffff?text=QUIZ",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
