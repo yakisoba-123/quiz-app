@@ -66,6 +66,18 @@
       font-weight: bold; border: none; padding: 12px; border-radius: 10px;
       font-size: 15px; cursor: pointer;
     }
+    .quit-btn {
+      width: 100%;
+      margin-top: 12px;
+      background: transparent;
+      border: 1px solid #ccc;
+      color: #666;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .quit-btn:active { background: #f0f0f0; }
 
     /* スタート画面 */
     .start-box { text-align: center; padding: 10px 0; }
@@ -191,11 +203,14 @@
     <div class="options" id="options"></div>
     <div class="result" id="result"></div>
     <button class="primary-btn" id="next-btn" style="display:none; width:100%; margin-top:16px;" onclick="nextQuestion()">次の問題へ</button>
+    
+    <!-- 中断ボタン -->
+    <button class="quit-btn" id="quit-btn" onclick="interruptQuiz()">⏹️ 中断してここまでの結果を見る</button>
   </div>
 
   <!-- 3. 結果画面 -->
   <div id="result-view" style="display: none;">
-    <h3 style="text-align: center; margin-top: 0;">🎉 お疲れ様でした！</h3>
+    <h3 style="text-align: center; margin-top: 0;" id="result-title">🎉 お疲れ様でした！</h3>
     
     <div class="summary-grid">
       <div class="summary-card">正答数<div class="val" id="res-correct" style="color: #28a745;">0</div></div>
@@ -468,10 +483,26 @@
     }
   }
 
+  // クイズの中断
+  function interruptQuiz() {
+    if (historyData.length === 0) {
+      if (confirm("まだ1問も回答していません。クイズを終了してスタート画面に戻りますか？")) {
+        showStartView();
+      }
+      return;
+    }
+
+    if (confirm(`現在 ${historyData.length} 問目まで回答済みです。ここで中断して結果を見ますか？`)) {
+      showResultView(true);
+    }
+  }
+
   // 結果画面の表示
-  function showResultView() {
+  function showResultView(isInterrupted = false) {
     hideAllViews();
     document.getElementById('result-view').style.display = 'block';
+
+    document.getElementById('result-title').textContent = isInterrupted ? "⏹️ 回答を中断しました" : "🎉 お疲れ様でした！";
 
     const total = historyData.length;
     const correctCount = historyData.filter(h => h.isCorrect).length;
