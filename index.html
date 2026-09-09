@@ -23,14 +23,52 @@
       max-width: 750px;
       width: 100%;
       box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+      transform-origin: top center;
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
     .title-logo { font-weight: bold; font-size: 22px; color: #333; }
+    
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* サイズ調整コントローラー */
+    .size-control {
+      display: flex;
+      align-items: center;
+      background: #e9e9eb;
+      border-radius: 18px;
+      padding: 2px 6px;
+    }
+    .size-btn {
+      background: transparent;
+      border: none;
+      font-size: 14px;
+      font-weight: bold;
+      color: #333;
+      padding: 6px 8px;
+      cursor: pointer;
+      border-radius: 12px;
+    }
+    .size-btn:active { background: #d0d0d4; }
+    .size-disp {
+      font-size: 13px;
+      font-weight: bold;
+      color: #555;
+      min-width: 44px;
+      text-align: center;
+      user-select: none;
+    }
+
     .mode-btn {
       background: #e9e9eb;
       border: none;
@@ -207,10 +245,18 @@
 </head>
 <body>
 
-<div class="card">
+<div class="card" id="app-card">
   <div class="header">
     <div class="title-logo" id="header-title">ランダム問題集</div>
-    <button class="mode-btn" id="toggle-mode-btn" onclick="toggleEditMode()">⚙️ 問題の編集</button>
+    <div class="header-right">
+      <!-- リアルタイムサイズ調整機能 -->
+      <div class="size-control">
+        <button class="size-btn" onclick="adjustSize(-10)">小</button>
+        <span class="size-disp" id="size-disp">100%</span>
+        <button class="size-btn" onclick="adjustSize(10)">大</button>
+      </div>
+      <button class="mode-btn" id="toggle-mode-btn" onclick="toggleEditMode()">⚙️ 問題の編集</button>
+    </div>
   </div>
 
   <!-- 1. スタート画面 -->
@@ -332,12 +378,36 @@
   let timerInterval = null;
   let totalElapsedStr = "00:00";
 
+  // 全体サイズ調整用変数
+  let currentScale = 100;
+
   function init() {
+    // 保存済みサイズの読み込み
+    const savedScale = localStorage.getItem('user_quiz_scale');
+    if (savedScale) {
+      currentScale = parseInt(savedScale, 10);
+    }
+    applyScale();
+
     const savedData = localStorage.getItem('user_quiz_data');
     const initialData = savedData !== null ? savedData : defaultCSV;
     document.getElementById('data-input').value = initialData;
     parseAndSetQuestions(initialData);
     showStartView();
+  }
+
+  function adjustSize(delta) {
+    currentScale += delta;
+    if (currentScale < 70) currentScale = 70;
+    if (currentScale > 150) currentScale = 150;
+    localStorage.setItem('user_quiz_scale', currentScale);
+    applyScale();
+  }
+
+  function applyScale() {
+    const card = document.getElementById('app-card');
+    card.style.zoom = currentScale / 100;
+    document.getElementById('size-disp').textContent = `${currentScale}%`;
   }
 
   function parseAndSetQuestions(text) {
@@ -571,17 +641,14 @@
       const isThisBtnCorrect = (btn.textContent === currentCorrectAnswer);
 
       if (isThisBtnCorrect) {
-        // 正解ボタン：緑色背景で強調
         btn.style.background = "#d4edda";
         btn.style.borderColor = "#28a745";
         btn.style.color = "#155724";
       } else if (!isCorrect && btn.textContent === selected) {
-        // 間違えて選択したボタン：赤色背景で強調
         btn.style.background = "#f8d7da";
         btn.style.borderColor = "#dc3545";
         btn.style.color = "#721c24";
       } else {
-        // その他の非正解ボタン：サイズは元のまま保持し、透明度だけ下げて非アクティブ化
         btn.style.opacity = "0.4";
       }
     }
