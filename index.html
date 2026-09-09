@@ -40,7 +40,7 @@
       cursor: pointer;
     }
 
-    /* 問題文のフォントサイズを拡大（26px ➔ 36px） */
+    /* 問題文のフォントサイズ */
     .question {
       font-size: 36px;
       font-weight: bold;
@@ -51,30 +51,47 @@
       word-break: break-word;
     }
     
-    /* 2列（2×2＋下段）の四角い選択肢レイアウト */
+    /* 2列の選択肢グリッドレイアウト */
     .options {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
     }
     button.opt-btn {
-      padding: 18px 12px;
-      font-size: 20px;
-      border: 2px solid #f0edfa;
       border-radius: 14px;
-      background: #ffffff;
-      color: #8035e0;
       font-weight: bold;
       cursor: pointer;
       text-align: center;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 85px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       line-height: 1.3;
+      transition: background-color 0.1s, transform 0.05s;
     }
-    button.opt-btn:active { background: #f0edfa; }
+    button.opt-btn:active { transform: scale(0.98); }
+
+    /* 上部4択（メイン選択肢）：サイズを大きく指定 */
+    button.main-opt {
+      padding: 22px 14px;
+      font-size: 22px;
+      min-height: 110px;
+      border: 2px solid #f0edfa;
+      background: #ffffff;
+      color: #8035e0;
+    }
+    button.main-opt:active { background: #f0edfa; }
+
+    /* 下部補助選択肢（わからない・この中にはない）：サイズを小さく指定 */
+    button.sub-opt {
+      padding: 10px 8px;
+      font-size: 15px;
+      min-height: 52px;
+      border: 1px solid #e5e5ea;
+      background: #fafafa;
+      color: #666666;
+    }
+    button.sub-opt:active { background: #ebebeb; }
     
     .result { margin-top: 24px; padding: 18px; border-radius: 12px; display: none; line-height: 1.5; font-size: 18px; }
     .correct { background: #d4edda; color: #155724; }
@@ -470,22 +487,24 @@
     const optsDiv = document.getElementById('options');
     optsDiv.innerHTML = '';
     
+    // 上部4択 (大きめスタイル main-opt)
     topFourOpts.forEach(opt => {
       const btn = document.createElement('button');
-      btn.className = 'opt-btn';
+      btn.className = 'opt-btn main-opt';
       btn.textContent = opt;
       btn.onclick = () => checkAnswer(opt);
       optsDiv.appendChild(btn);
     });
 
+    // 下部補助ボタン (小さめスタイル sub-opt)
     const dontKnowBtn = document.createElement('button');
-    dontKnowBtn.className = 'opt-btn';
+    dontKnowBtn.className = 'opt-btn sub-opt';
     dontKnowBtn.textContent = 'わからない';
     dontKnowBtn.onclick = () => checkAnswer('わからない');
     optsDiv.appendChild(dontKnowBtn);
 
     const noneBtn = document.createElement('button');
-    noneBtn.className = 'opt-btn';
+    noneBtn.className = 'opt-btn sub-opt';
     noneBtn.textContent = 'この中にはない';
     noneBtn.onclick = () => checkAnswer('この中にはない');
     optsDiv.appendChild(noneBtn);
