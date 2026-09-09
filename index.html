@@ -80,13 +80,21 @@
 
     /* 問題文のフォントサイズ */
     .question {
-      font-size: 36px;
+      font-size: 34px;
       font-weight: bold;
       margin-bottom: 28px;
       line-height: 1.4;
       text-align: center;
       color: #1d1d1f;
       word-break: break-word;
+    }
+
+    .q-number-tag {
+      font-size: 16px;
+      color: #007aff;
+      font-weight: bold;
+      display: block;
+      margin-bottom: 8px;
     }
 
     /* 上部4択エリアとオーバーレイの親容器 */
@@ -215,6 +223,30 @@
     }
     .mode-select-btn.active { background: #007aff; color: white; }
 
+    /* 範囲指定ボックス */
+    .range-selector-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: #f8f9fa;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 16px;
+      color: #333;
+    }
+    .range-input {
+      width: 80px;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 16px;
+      outline: none;
+    }
+    .range-input:focus { border-color: #007aff; }
+
     /* 問題数選択 */
     .count-selector {
       display: flex; justify-content: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
@@ -301,6 +333,15 @@
       <button class="mode-select-btn" onclick="selectQuizMode('reverse', this)">逆出題（答え ➔ 問題）</button>
     </div>
     
+    <!-- 出題範囲指定 -->
+    <div class="section-label">出題範囲（問題番号）</div>
+    <div class="range-selector-box">
+      <span>No.</span>
+      <input type="number" id="range-start-input" class="range-input" min="1" value="1">
+      <span>〜 No.</span>
+      <input type="number" id="range-end-input" class="range-input" min="1">
+    </div>
+
     <!-- 問題数選択 -->
     <div class="section-label">出題数</div>
     <div class="count-selector">
@@ -329,7 +370,11 @@
       <span id="quiz-timer" style="font-weight: bold; color: #333; font-size: 16px;">⏱️ 00:00</span>
       <span id="quiz-mode-text" style="font-weight: bold; color: #007aff;">通常モード</span>
     </div>
-    <div class="question" id="question">問題文がここに入ります</div>
+    
+    <div class="question" id="question">
+      <span class="q-number-tag" id="q-number-tag">No.1</span>
+      <span id="q-text">問題文がここに入ります</span>
+    </div>
     
     <!-- 4択エリアと結果オーバーレイの容器 -->
     <div class="main-options-wrapper">
@@ -376,6 +421,7 @@
     <div class="format-info">
       <strong>【入力フォーマット】</strong><br>
       <code>問題文, 正解, 解説（省略可）</code><br>
+      ※上から順に問題番号 (No.1, No.2...) が自動で振られます。<br>
       ※解説がない問題は「問題文, 正解」のみで記述可能です。<br>
       ※「逆出題」選択時は自動的に「正解 ➔ 問題文」で出題されます。
     </div>
@@ -455,20 +501,35 @@
     answerPool = [];
     questionPool = [];
 
+    let count = 0;
     lines.forEach(line => {
       if (!line.trim()) return;
       const cols = line.includes('\t') ? line.split('\t') : line.split(',');
       
       if (cols.length >= 2) {
+        count++;
         const q = cols[0].trim();
         const ans = cols[1].trim();
         const exp = (cols[2] && cols[2].trim()) ? cols[2].trim() : "";
 
-        questions.push({ q, ans, exp });
+        // 自動的に1から順番に問題番号(id)を振り分け
+        questions.push({ id: count, q, ans, exp });
         if (!answerPool.includes(ans)) answerPool.push(ans);
         if (!questionPool.includes(q)) questionPool.push(q);
       }
     });
+
+    // 出題範囲入力ボックスの初期上限を設定
+    const rangeEndInput = document.getElementById('range-end-input');
+    if (rangeEndInput) {
+      rangeEndInput.placeholder = count > 0 ? count : '';
+      rangeEndInput.max = count;
+      rangeEndInput.value = count > 0 ? count : '';
+    }
+    const rangeStartInput = document.getElementById('range-start-input');
+    if (rangeStartInput) {
+      rangeStartInput.max = count;
+    }
   }
 
   function shuffle(array) {
@@ -535,6 +596,27 @@
       return;
     }
 
+    // 出題範囲の取得
+    let rangeStart = parseInt(document.getElementById('range-start-input').value, 10);
+    let rangeEnd = parseInt(document.getElementById('range-end-input').value, 10);
+
+    if (isNaN(rangeStart) || rangeStart < 1) rangeStart = 1;
+    if (isNaN(rangeEnd) || rangeEnd > questions.length) rangeEnd = questions.length;
+
+    if (rangeStart > rangeEnd) {
+      alert(`範囲の指定が正しくありません。(No.${rangeStart} 〜 No.${rangeEnd})`);
+      return;
+    }
+
+    // 指定範囲の問題のみを抽出
+    const targetRangeQuestions = questions.filter(q => q.id >= rangeStart && q.id <= rangeEnd);
+
+    if (targetRangeQuestions.length === 0) {
+      alert("指定された範囲内に問題が存在しません。");
+      return;
+    }
+
+    // 出題数の決定
     const customInput = document.getElementById('custom-count-input');
     const customVal = parseInt(customInput.value, 10);
 
@@ -544,17 +626,12 @@
     }
 
     if (targetCount === 0) {
-      targetCount = questions.length;
+      targetCount = targetRangeQuestions.length;
     }
 
-    if (!targetCount || targetCount <= 0) {
-      alert("1以上の問題数を入力または選択してください。");
-      return;
-    }
-
-    const limit = Math.min(targetCount, questions.length);
+    const limit = Math.min(targetCount, targetRangeQuestions.length);
     
-    const shuffled = shuffle(questions);
+    const shuffled = shuffle(targetRangeQuestions);
     sessionQuestions = shuffled.slice(0, limit);
     
     currentStep = 0;
@@ -584,7 +661,9 @@
     const targetAns = isNormal ? currentQ.ans : currentQ.q;
     const currentPool = isNormal ? answerPool : questionPool;
 
-    document.getElementById('question').textContent = promptText;
+    // 問題番号(No.X)と問題文を表示
+    document.getElementById('q-number-tag').textContent = `No. ${currentQ.id}`;
+    document.getElementById('q-text').textContent = promptText;
 
     const dummyPool = currentPool.filter(item => item !== targetAns);
     const makeNoneCorrect = (dummyPool.length >= 4) && (Math.random() < 0.25);
@@ -639,6 +718,7 @@
     const isCorrect = (selected === 'わからない') ? false : (selected === currentCorrectAnswer);
 
     historyData.push({
+      qId: currentQ.id,
       promptText: promptText,
       realAns: realAns,
       exp: currentQ.exp,
@@ -774,7 +854,7 @@
       let expHTML = item.exp ? `<div class="history-exp">${item.exp}</div>` : '';
 
       div.innerHTML = `
-        <div class="history-q">${item.isCorrect ? '⭕' : '❌'} Q. ${item.promptText}</div>
+        <div class="history-q">${item.isCorrect ? '⭕' : '❌'} No.${item.qId} ${item.promptText}</div>
         <div class="history-ans">${detailText}</div>
         ${expHTML}
       `;
