@@ -126,10 +126,9 @@
   <div id="edit-view" style="display: none;">
     <div class="format-info">
       <strong>【入力フォーマット】</strong><br>
-      1行に1問ずつ、カンマ（,）またはタブで区切って入力してください。<br>
-      <code>問題文, 選択肢1, 選択肢2, 選択肢3, 選択肢4, 正解の文字, 解説</code><br>
-      ※「この中にはない」は自動で最後に5番目の選択肢として追加されます。<br>
-      ※選択肢1〜4の中に正解がない場合は、正解の欄に「この中にはない」と記述してください。
+      <code>問題文, 正解, 解説</code><br>
+      ※選択肢を書く必要はありません。すべての「正解」から自動で共通の選択肢プールが作られます。<br>
+      ※たまに選択肢から正解が除外され、「この中にはない」が正解になります。
     </div>
     <textarea id="data-input" placeholder="ここにテキストを貼り付けてください"></textarea>
     
@@ -141,14 +140,19 @@
 </div>
 
 <script>
-  // 初期サンプル問題
-  const defaultCSV = `日本の首都は？,大阪,名古屋,京都,福岡,東京,正解は「東京」のため、選択肢1〜4には存在しません。
-「Apple」の意味は？,みかん,ぶどう,りんご,バナナ,りんご,バラ科リンゴ属の果実です。
-太陽系で最も大きい惑星は？,火星,木星,土星,海王星,木星,直径は地球の約11倍あります。
-徳川家康が開いた幕府は？,鎌倉幕府,室町幕府,仙台幕府,長崎幕府,この中にはない,正解は「江戸幕府」です。`;
+  // 初期サンプルデータ（問題文, 正解, 解説）
+  const defaultCSV = `日本の首都は？,東京,1868年に東京へ改称されました。
+「Apple」の意味は？,りんご,バラ科リンゴ属の果実です。
+太陽系で最も大きい惑星は？,木星,直径は地球の約11倍あります。
+徳川家康が開いた幕府は？,江戸幕府,1603年に開かれました。
+フランスの首都は？,パリ,セーヌ川の河畔に位置する都市です。
+日本の最高峰の山は？,富士山,標高3776mの独立峰です。
+世界で一番広い海洋は？,太平洋,地球の表面積の約3分の1を占めます。`;
 
   let questions = [];
+  let answerPool = [];
   let currentQ = null;
+  let currentCorrectAnswer = "";
   let totalCount = 0;
   let correctCount = 0;
   let isEditMode = false;
@@ -164,18 +168,21 @@
   function parseAndSetQuestions(text) {
     const lines = text.trim().split('\n');
     questions = [];
+    answerPool = [];
 
     lines.forEach(line => {
       if (!line.trim()) return;
       const cols = line.includes('\t') ? line.split('\t') : line.split(',');
       
-      if (cols.length >= 6) {
+      if (cols.length >= 2) {
         const q = cols[0].trim();
-        const opts = [cols[1].trim(), cols[2].trim(), cols[3].trim(), cols[4].trim()];
-        const ans = cols[5].trim();
-        const exp = cols[6] ? cols[6].trim() : "解説はありません。";
+        const ans = cols[1].trim();
+        const exp = cols[2] ? cols[2].trim() : "解説はありません。";
 
-        questions.push({ q, opts, ans, exp });
+        questions.push({ q, ans, exp });
+        if (!answerPool.includes(ans)) {
+          answerPool.push(ans);
+        }
       }
     });
   }
@@ -207,8 +214,19 @@
       localStorage.removeItem('user_quiz_data');
       document.getElementById('data-input').value = '';
       questions = [];
+      answerPool = [];
       alert("すべてのデータを消去しました。新しい問題を登録してください。");
     }
+  }
+
+  // 配列をランダムシャッフル
+  function shuffle(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
   }
 
   function loadQuestion() {
@@ -224,25 +242,47 @@
     document.getElementById('result').style.display = 'none';
     document.getElementById('next-btn').style.display = 'none';
     
+    // ランダムに1問選択
     const randomIndex = Math.floor(Math.random() * questions.length);
     currentQ = questions[randomIndex];
 
     document.getElementById('question').textContent = currentQ.q;
-    
+
+    // 正解以外のプール（ダミー選択肢の候補）
+    const dummyPool = answerPool.filter(item => item !== currentQ.ans);
+
+    // 25%の確率で正解を選択肢に含めず、「この中にはない」を正解にする（ダミーが4個以上ある場合）
+    const makeNoneCorrect = (dummyPool.length >= 4) && (Math.random() < 0.25);
+
+    let selectedOpts = [];
+
+    if (makeNoneCorrect) {
+      // ダミーから4個選ぶ
+      const shuffledDummies = shuffle(dummyPool);
+      selectedOpts = shuffledDummies.slice(0, 4);
+      currentCorrectAnswer = "この中にはない";
+    } else {
+      // 正解を含めて選択肢を作成
+      currentCorrectAnswer = currentQ.ans;
+      const shuffledDummies = shuffle(dummyPool);
+      const neededDummies = Math.min(3, shuffledDummies.length);
+      const chosenDummies = shuffledDummies.slice(0, neededDummies);
+      
+      selectedOpts = shuffle([currentQ.ans, ...chosenDummies]);
+    }
+
+    // 最後に「この中にはない」を追加
+    selectedOpts.push("this-is-none-placeholder");
+
     const optsDiv = document.getElementById('options');
     optsDiv.innerHTML = '';
     
-    // 入力された選択肢 + 自動追加の「この中にはない」
-    const displayOpts = [...currentQ.opts];
-    if (!displayOpts.includes("この中にはない")) {
-      displayOpts.push("この中にはない");
-    }
-
-    displayOpts.forEach(opt => {
+    selectedOpts.forEach(opt => {
       const btn = document.createElement('button');
       btn.className = 'opt-btn';
-      btn.textContent = opt;
-      btn.onclick = () => checkAnswer(opt);
+      btn.textContent = (opt === "this-is-none-placeholder") ? "この中にはない" : opt;
+      const actualVal = (opt === "this-is-none-placeholder") ? "この中にはない" : opt;
+      btn.onclick = () => checkAnswer(actualVal);
       optsDiv.appendChild(btn);
     });
 
@@ -251,13 +291,19 @@
 
   function checkAnswer(selected) {
     totalCount++;
-    const isCorrect = selected === currentQ.ans;
+    const isCorrect = selected === currentCorrectAnswer;
     if (isCorrect) correctCount++;
 
     const resultDiv = document.getElementById('result');
     resultDiv.style.display = 'block';
     resultDiv.className = 'result ' + (isCorrect ? 'correct' : 'incorrect');
-    resultDiv.innerHTML = `<strong>${isCorrect ? '正解！' : '不正解...'}</strong><br>${currentQ.exp}`;
+    
+    let expMsg = currentQ.exp;
+    if (currentCorrectAnswer === "この中にはない") {
+      expMsg = `本当の正解は「<strong>${currentQ.ans}</strong>」です。<br>${currentQ.exp}`;
+    }
+
+    resultDiv.innerHTML = `<strong>${isCorrect ? '正解！' : '不正解...'}</strong><br>${expMsg}`;
 
     const btns = document.getElementById('options').getElementsByTagName('button');
     for (let btn of btns) btn.disabled = true;
