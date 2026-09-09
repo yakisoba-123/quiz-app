@@ -7,6 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4A90E2">
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: #f5f5f7;
@@ -29,7 +30,7 @@
       align-items: center;
       margin-bottom: 16px;
     }
-    .stats { color: #666; font-size: 14px; }
+    .title-logo { font-weight: bold; font-size: 16px; color: #333; }
     .mode-btn {
       background: #e9e9eb;
       border: none;
@@ -38,7 +39,7 @@
       font-size: 13px;
       cursor: pointer;
     }
-    .question { font-size: 18px; font-weight: bold; margin-bottom: 16px; }
+    .question { font-size: 18px; font-weight: bold; margin-bottom: 16px; line-height: 1.4; }
     .options { display: flex; flex-direction: column; gap: 8px; }
     button.opt-btn {
       padding: 12px;
@@ -50,112 +51,182 @@
       text-align: left;
     }
     button.opt-btn:active { background: #e2e8f0; }
-    .result { margin-top: 16px; padding: 12px; border-radius: 8px; display: none; }
+    .result { margin-top: 16px; padding: 12px; border-radius: 8px; display: none; line-height: 1.4; }
     .correct { background: #d4edda; color: #155724; }
     .incorrect { background: #f8d7da; color: #721c24; }
     
-    .btn-group {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-    }
+    .btn-group { display: flex; gap: 8px; margin-top: 12px; }
     .primary-btn {
-      flex: 2;
-      background: #007aff;
-      color: white;
-      text-align: center;
-      font-weight: bold;
-      border: none;
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 15px;
-      cursor: pointer;
+      flex: 2; background: #007aff; color: white; text-align: center;
+      font-weight: bold; border: none; padding: 12px; border-radius: 10px;
+      font-size: 15px; cursor: pointer;
     }
     .danger-btn {
-      flex: 1;
-      background: #ff3b30;
-      color: white;
-      text-align: center;
-      font-weight: bold;
-      border: none;
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 15px;
-      cursor: pointer;
+      flex: 1; background: #ff3b30; color: white; text-align: center;
+      font-weight: bold; border: none; padding: 12px; border-radius: 10px;
+      font-size: 15px; cursor: pointer;
     }
 
+    /* スタート画面 */
+    .start-box { text-align: center; padding: 10px 0; }
+    .count-selector {
+      display: flex; justify-content: center; gap: 8px; margin: 16px 0 12px; flex-wrap: wrap;
+    }
+    .count-btn {
+      padding: 10px 16px; border: 1px solid #007aff; background: #fff;
+      color: #007aff; border-radius: 8px; font-weight: bold; cursor: pointer;
+    }
+    .count-btn.active { background: #007aff; color: white; }
+
+    .custom-count-box {
+      display: flex; justify-content: center; align-items: center; gap: 8px;
+      margin-bottom: 20px; font-size: 14px; color: #555;
+    }
+    .custom-count-input {
+      width: 80px; padding: 8px 10px; border: 1px solid #ccc;
+      border-radius: 8px; text-align: center; font-size: 15px; outline: none;
+    }
+    .custom-count-input:focus { border-color: #007aff; }
+
+    /* 結果画面 */
+    .summary-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+      text-align: center; margin: 16px 0;
+    }
+    .summary-card {
+      background: #f8f9fa; padding: 12px 8px; border-radius: 10px;
+    }
+    .summary-card .val { font-size: 20px; font-weight: bold; margin-top: 4px; }
+    .tab-group { display: flex; gap: 4px; margin-top: 16px; border-bottom: 2px solid #eee; }
+    .tab-btn {
+      flex: 1; padding: 8px 4px; border: none; background: none;
+      font-size: 13px; font-weight: bold; color: #888; cursor: pointer;
+    }
+    .tab-btn.active { color: #007aff; border-bottom: 2px solid #007aff; margin-bottom: -2px; }
+    .history-list { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; }
+    .history-item {
+      padding: 12px; border-radius: 8px; font-size: 14px; border-left: 4px solid #ccc; background: #f9f9f9;
+    }
+    .history-item.is-correct { border-left-color: #28a745; background: #f0fff4; }
+    .history-item.is-incorrect { border-left-color: #dc3545; background: #fff5f5; }
+    .history-q { font-weight: bold; margin-bottom: 4px; }
+    .history-ans { font-size: 13px; color: #444; }
+    .history-exp { font-size: 12px; color: #666; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #ddd; }
+
+    /* 編集画面 */
     textarea {
-      width: 100%;
-      height: 200px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 10px;
-      font-size: 13px;
-      font-family: monospace;
-      margin-bottom: 4px;
+      width: 100%; height: 200px; border: 1px solid #ccc;
+      border-radius: 8px; padding: 10px; font-size: 13px; font-family: monospace; margin-bottom: 4px;
     }
     .format-info {
-      font-size: 12px;
-      color: #666;
-      background: #f0f0f5;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      line-height: 1.4;
+      font-size: 12px; color: #666; background: #f0f0f5;
+      padding: 10px; border-radius: 8px; margin-bottom: 12px; line-height: 1.4;
     }
+    .progress-bar-container { width: 100%; background: #e9e9eb; height: 6px; border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
+    .progress-bar { height: 100%; background: #007aff; width: 0%; transition: width 0.3s; }
   </style>
 </head>
 <body>
 
 <div class="card">
   <div class="header">
-    <div class="stats" id="stats">出題準備中...</div>
-    <button class="mode-btn" id="toggle-mode-btn" onclick="toggleMode()">⚙️ 問題の編集</button>
+    <div class="title-logo" id="header-title">ランダム問題集</div>
+    <button class="mode-btn" id="toggle-mode-btn" onclick="toggleEditMode()">⚙️ 問題の編集</button>
   </div>
 
-  <!-- クイズ画面 -->
-  <div id="quiz-view">
+  <!-- 1. スタート画面 -->
+  <div id="start-view" class="start-box">
+    <h3>回答する問題数を選んでください</h3>
+    <div id="total-registered-info" style="color: #666; font-size: 14px;"></div>
+    
+    <div class="count-selector">
+      <button class="count-btn active" onclick="selectCount(5, this)">5問</button>
+      <button class="count-btn" onclick="selectCount(10, this)">10問</button>
+      <button class="count-btn" onclick="selectCount(20, this)">20問</button>
+      <button class="count-btn" onclick="selectCount(0, this)">全問</button>
+    </div>
+
+    <!-- 任意指定ボックス -->
+    <div class="custom-count-box">
+      <span>任意指定:</span>
+      <input type="number" id="custom-count-input" class="custom-count-input" min="1" placeholder="例: 3" oninput="onCustomInput(this)">
+      <span>問</span>
+    </div>
+
+    <button class="primary-btn" style="width: 100%; padding: 14px;" onclick="startQuiz()">スタート！</button>
+  </div>
+
+  <!-- 2. クイズ画面 -->
+  <div id="quiz-view" style="display: none;">
+    <div class="progress-bar-container"><div class="progress-bar" id="progress-bar"></div></div>
+    <div style="font-size: 12px; color: #888; margin-bottom: 8px;" id="quiz-progress-text">第 1 問 / 5問</div>
     <div class="question" id="question">問題文がここに入ります</div>
     <div class="options" id="options"></div>
     <div class="result" id="result"></div>
     <button class="primary-btn" id="next-btn" style="display:none; width:100%; margin-top:16px;" onclick="nextQuestion()">次の問題へ</button>
   </div>
 
-  <!-- 問題入力・編集画面 -->
+  <!-- 3. 結果画面 -->
+  <div id="result-view" style="display: none;">
+    <h3 style="text-align: center; margin-top: 0;">🎉 お疲れ様でした！</h3>
+    
+    <div class="summary-grid">
+      <div class="summary-card">正答数<div class="val" id="res-correct" style="color: #28a745;">0</div></div>
+      <div class="summary-card">誤答数<div class="val" id="res-incorrect" style="color: #dc3545;">0</div></div>
+      <div class="summary-card">正答率<div class="val" id="res-rate" style="color: #007aff;">0%</div></div>
+    </div>
+
+    <!-- 復習タブ -->
+    <div class="tab-group">
+      <button class="tab-btn active" onclick="switchTab('incorrect', this)">❌ 不正解 (<span id="count-bad">0</span>)</button>
+      <button class="tab-btn" onclick="switchTab('correct', this)">⭕ 正解 (<span id="count-good">0</span>)</button>
+      <button class="tab-btn" onclick="switchTab('all', this)">すべて (<span id="count-all">0</span>)</button>
+    </div>
+
+    <div class="history-list" id="history-list"></div>
+
+    <div style="margin-top: 20px;">
+      <button class="primary-btn" style="width: 100%; margin-bottom: 8px;" onclick="showStartView()">もう一度挑戦する</button>
+    </div>
+  </div>
+
+  <!-- 4. 問題入力・編集画面 -->
   <div id="edit-view" style="display: none;">
     <div class="format-info">
       <strong>【入力フォーマット】</strong><br>
       <code>問題文, 正解, 解説（省略可）</code><br>
       ※解説がない問題は「問題文, 正解」のみで記述可能です。<br>
-      ※すべての「正解」から自動で共通の選択肢プールが作られます。<br>
-      ※たまに選択肢から正解が除外され、「この中にはない」が正解になります。
+      ※すべての「正解」から自動で共通の選択肢プールが作られます。
     </div>
     <textarea id="data-input" placeholder="ここにテキストを貼り付けてください"></textarea>
     
     <div class="btn-group">
-      <button class="primary-btn" onclick="saveQuestions()">保存して変更</button>
+      <button class="primary-btn" onclick="saveQuestions()">保存して適用</button>
       <button class="danger-btn" onclick="clearAllData()">全消去</button>
     </div>
   </div>
 </div>
 
 <script>
-  // 初期サンプルデータ（解説あり・なしが混在可能）
+  // 初期サンプルデータ
   const defaultCSV = `日本の首都は？,東京
 「Apple」の意味は？,りんご,バラ科リンゴ属の果実です。
 太陽系で最も大きい惑星は？,木星
 徳川家康が開いた幕府は？,江戸幕府,1603年に開かれました。
 フランスの首都は？,パリ
 日本の最高峰の山は？,富士山,標高3776mの独立峰です。
-世界で一番広い海洋は？,太平洋`;
+世界で一番広い海洋は？,太平洋
+夏目漱石の代表作で「吾輩は〇〇である」の〇〇は？,猫`;
 
   let questions = [];
   let answerPool = [];
-  let currentQ = null;
+  
+  // クイズセッション用変数
+  let sessionQuestions = [];
+  let selectedCount = 5; // 0は「全問」
+  let currentStep = 0;
+  let historyData = [];
   let currentCorrectAnswer = "";
-  let totalCount = 0;
-  let correctCount = 0;
   let isEditMode = false;
 
   function init() {
@@ -163,7 +234,7 @@
     const initialData = savedData !== null ? savedData : defaultCSV;
     document.getElementById('data-input').value = initialData;
     parseAndSetQuestions(initialData);
-    loadQuestion();
+    showStartView();
   }
 
   function parseAndSetQuestions(text) {
@@ -178,7 +249,6 @@
       if (cols.length >= 2) {
         const q = cols[0].trim();
         const ans = cols[1].trim();
-        // 解説がある場合のみ取得、無ければ空文字にする
         const exp = (cols[2] && cols[2].trim()) ? cols[2].trim() : "";
 
         questions.push({ q, ans, exp });
@@ -189,11 +259,246 @@
     });
   }
 
-  function toggleMode() {
+  // 配列シャッフル
+  function shuffle(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // 画面切り替え（スタート画面へ）
+  function showStartView() {
+    hideAllViews();
+    document.getElementById('start-view').style.display = 'block';
+    document.getElementById('header-title').textContent = "ランダム問題集";
+    document.getElementById('total-registered-info').textContent = `（登録問題数: 全 ${questions.length} 問）`;
+  }
+
+  function selectCount(count, btn) {
+    selectedCount = count;
+    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('custom-count-input').value = '';
+  }
+
+  function onCustomInput(input) {
+    // 任意入力欄に文字が入ったらボタンの選択状態を解除する
+    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+    const val = parseInt(input.value, 10);
+    if (!isNaN(val) && val > 0) {
+      selectedCount = val;
+    }
+  }
+
+  // クイズ開始
+  function startQuiz() {
+    if (questions.length === 0) {
+      alert("問題が登録されていません。「⚙️ 問題の編集」から問題を追加してください。");
+      return;
+    }
+
+    const customInput = document.getElementById('custom-count-input');
+    const customVal = parseInt(customInput.value, 10);
+
+    let targetCount = selectedCount;
+    if (!isNaN(customVal) && customVal > 0) {
+      targetCount = customVal;
+    }
+
+    if (targetCount === 0) {
+      targetCount = questions.length; // 0なら全問
+    }
+
+    if (!targetCount || targetCount <= 0) {
+      alert("1以上の問題数を入力または選択してください。");
+      return;
+    }
+
+    // 登録数より多い数字が指定された場合は全問題数に制限
+    const limit = Math.min(targetCount, questions.length);
+    
+    // 問題のシャッフルと抽出
+    const shuffled = shuffle(questions);
+    sessionQuestions = shuffled.slice(0, limit);
+    
+    currentStep = 0;
+    historyData = [];
+
+    hideAllViews();
+    document.getElementById('quiz-view').style.display = 'block';
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+
+    const qTotal = sessionQuestions.length;
+    const qCurrent = currentStep + 1;
+    
+    // プログレスバー & テキスト
+    document.getElementById('quiz-progress-text').textContent = `第 ${qCurrent} 問 / 全 ${qTotal} 問`;
+    document.getElementById('progress-bar').style.width = `${((qCurrent - 1) / qTotal) * 100}%`;
+
+    const currentQ = sessionQuestions[currentStep];
+    document.getElementById('question').textContent = currentQ.q;
+
+    // 選択肢作成
+    const dummyPool = answerPool.filter(item => item !== currentQ.ans);
+    const makeNoneCorrect = (dummyPool.length >= 4) && (Math.random() < 0.25);
+
+    let selectedOpts = [];
+    if (makeNoneCorrect) {
+      const shuffledDummies = shuffle(dummyPool);
+      selectedOpts = shuffledDummies.slice(0, 4);
+      currentCorrectAnswer = "この中にはない";
+    } else {
+      currentCorrectAnswer = currentQ.ans;
+      const shuffledDummies = shuffle(dummyPool);
+      const neededDummies = Math.min(3, shuffledDummies.length);
+      const chosenDummies = shuffledDummies.slice(0, neededDummies);
+      selectedOpts = shuffle([currentQ.ans, ...chosenDummies]);
+    }
+
+    selectedOpts.push("this-is-none-placeholder");
+
+    const optsDiv = document.getElementById('options');
+    optsDiv.innerHTML = '';
+    
+    selectedOpts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      const actualVal = (opt === "this-is-none-placeholder") ? "この中にはない" : opt;
+      btn.textContent = actualVal;
+      btn.onclick = () => checkAnswer(actualVal);
+      optsDiv.appendChild(btn);
+    });
+  }
+
+  function checkAnswer(selected) {
+    const currentQ = sessionQuestions[currentStep];
+    const isCorrect = selected === currentCorrectAnswer;
+
+    // 履歴に保存
+    historyData.push({
+      q: currentQ.q,
+      ans: currentQ.ans,
+      exp: currentQ.exp,
+      selected: selected,
+      correctAnswer: currentCorrectAnswer,
+      isCorrect: isCorrect
+    });
+
+    const resultDiv = document.getElementById('result');
+    resultDiv.style.display = 'block';
+    resultDiv.className = 'result ' + (isCorrect ? 'correct' : 'incorrect');
+    
+    let resultHTML = `<strong>${isCorrect ? '⭕ 正解！' : '❌ 不正解...'}</strong>`;
+    if (currentCorrectAnswer === "この中にはない") {
+      resultHTML += `<br>本当の正解は「<strong>${currentQ.ans}</strong>」です。`;
+    }
+    if (currentQ.exp) {
+      resultHTML += `<br>${currentQ.exp}`;
+    }
+
+    resultDiv.innerHTML = resultHTML;
+
+    const btns = document.getElementById('options').getElementsByTagName('button');
+    for (let btn of btns) btn.disabled = true;
+
+    // ボタンテキスト調整（最終問の場合）
+    const nextBtn = document.getElementById('next-btn');
+    nextBtn.textContent = (currentStep + 1 === sessionQuestions.length) ? "結果を見る" : "次の問題へ";
+    nextBtn.style.display = 'block';
+  }
+
+  function nextQuestion() {
+    currentStep++;
+    if (currentStep < sessionQuestions.length) {
+      loadQuestion();
+    } else {
+      showResultView();
+    }
+  }
+
+  // 結果画面の表示
+  function showResultView() {
+    hideAllViews();
+    document.getElementById('result-view').style.display = 'block';
+
+    const total = historyData.length;
+    const correctCount = historyData.filter(h => h.isCorrect).length;
+    const incorrectCount = total - correctCount;
+    const rate = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    document.getElementById('res-correct').textContent = `${correctCount}問`;
+    document.getElementById('res-incorrect').textContent = `${incorrectCount}問`;
+    document.getElementById('res-rate').textContent = `${rate}%`;
+
+    document.getElementById('count-bad').textContent = incorrectCount;
+    document.getElementById('count-good').textContent = correctCount;
+    document.getElementById('count-all').textContent = total;
+
+    // 最初は「不正解」タブを表示（不正解が0なら「すべて」を表示）
+    const firstTab = incorrectCount > 0 ? 'incorrect' : 'all';
+    const firstTabBtn = document.querySelectorAll('.tab-btn')[incorrectCount > 0 ? 0 : 2];
+    switchTab(firstTab, firstTabBtn);
+  }
+
+  // 結果画面のタブ切り替え
+  function switchTab(type, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const listDiv = document.getElementById('history-list');
+    listDiv.innerHTML = '';
+
+    let filtered = historyData;
+    if (type === 'correct') filtered = historyData.filter(h => h.isCorrect);
+    if (type === 'incorrect') filtered = historyData.filter(h => !h.isCorrect);
+
+    if (filtered.length === 0) {
+      listDiv.innerHTML = `<div style="text-align:center; color:#888; padding: 20px;">該当する問題はありません</div>`;
+      return;
+    }
+
+    filtered.forEach((item) => {
+      const div = document.createElement('div');
+      div.className = `history-item ${item.isCorrect ? 'is-correct' : 'is-incorrect'}`;
+      
+      let detailText = `あなたの選択: <strong>${item.selected}</strong>`;
+      if (!item.isCorrect) {
+        detailText += `<br>正解: <strong style="color:#d9534f;">${item.correctAnswer}</strong>`;
+        if (item.correctAnswer === "この中にはない") {
+          detailText += ` （本当の答え: <strong>${item.ans}</strong>）`;
+        }
+      }
+
+      let expHTML = item.exp ? `<div class="history-exp">${item.exp}</div>` : '';
+
+      div.innerHTML = `
+        <div class="history-q">${item.isCorrect ? '⭕' : '❌'} Q. ${item.q}</div>
+        <div class="history-ans">${detailText}</div>
+        ${expHTML}
+      `;
+      listDiv.appendChild(div);
+    });
+  }
+
+  // 編集モード切り替え
+  function toggleEditMode() {
     isEditMode = !isEditMode;
-    document.getElementById('quiz-view').style.display = isEditMode ? 'none' : 'block';
-    document.getElementById('edit-view').style.display = isEditMode ? 'block' : 'none';
-    document.getElementById('toggle-mode-btn').textContent = isEditMode ? '✕ クイズに戻る' : '⚙️ 問題の編集';
+    if (isEditMode) {
+      hideAllViews();
+      document.getElementById('edit-view').style.display = 'block';
+      document.getElementById('toggle-mode-btn').textContent = '✕ 閉じる';
+    } else {
+      showStartView();
+      document.getElementById('toggle-mode-btn').textContent = '⚙️ 問題の編集';
+    }
   }
 
   function saveQuestions() {
@@ -202,10 +507,8 @@
 
     if (questions.length > 0) {
       localStorage.setItem('user_quiz_data', rawText);
-      totalCount = 0;
-      correctCount = 0;
-      toggleMode();
-      loadQuestion();
+      alert("問題データを更新しました！");
+      toggleEditMode();
     } else {
       alert("有効な問題データがありません。正しいフォーマットで入力してください。");
     }
@@ -217,117 +520,15 @@
       document.getElementById('data-input').value = '';
       questions = [];
       answerPool = [];
-      alert("すべてのデータを消去しました。新しい問題を登録してください。");
+      alert("すべてのデータを消去しました。");
     }
   }
 
-  // 配列をランダムシャッフル
-  function shuffle(array) {
-    const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
-
-  function loadQuestion() {
-    if (questions.length === 0) {
-      document.getElementById('question').textContent = "問題が登録されていません。「⚙️ 問題の編集」から問題を追加してください。";
-      document.getElementById('options').innerHTML = '';
-      document.getElementById('result').style.display = 'none';
-      document.getElementById('next-btn').style.display = 'none';
-      updateStats();
-      return;
-    }
-
-    document.getElementById('result').style.display = 'none';
-    document.getElementById('next-btn').style.display = 'none';
-    
-    // ランダムに1問選択
-    const randomIndex = Math.floor(Math.random() * questions.length);
-    currentQ = questions[randomIndex];
-
-    document.getElementById('question').textContent = currentQ.q;
-
-    // 正解以外のプール（ダミー選択肢の候補）
-    const dummyPool = answerPool.filter(item => item !== currentQ.ans);
-
-    // 25%の確率で正解を選択肢に含めず、「この中にはない」を正解にする（ダミーが4個以上ある場合）
-    const makeNoneCorrect = (dummyPool.length >= 4) && (Math.random() < 0.25);
-
-    let selectedOpts = [];
-
-    if (makeNoneCorrect) {
-      // ダミーから4個選ぶ
-      const shuffledDummies = shuffle(dummyPool);
-      selectedOpts = shuffledDummies.slice(0, 4);
-      currentCorrectAnswer = "この中にはない";
-    } else {
-      // 正解を含めて選択肢を作成
-      currentCorrectAnswer = currentQ.ans;
-      const shuffledDummies = shuffle(dummyPool);
-      const neededDummies = Math.min(3, shuffledDummies.length);
-      const chosenDummies = shuffledDummies.slice(0, neededDummies);
-      
-      selectedOpts = shuffle([currentQ.ans, ...chosenDummies]);
-    }
-
-    // 最後に「この中にはない」を追加
-    selectedOpts.push("this-is-none-placeholder");
-
-    const optsDiv = document.getElementById('options');
-    optsDiv.innerHTML = '';
-    
-    selectedOpts.forEach(opt => {
-      const btn = document.createElement('button');
-      btn.className = 'opt-btn';
-      btn.textContent = (opt === "this-is-none-placeholder") ? "この中にはない" : opt;
-      const actualVal = (opt === "this-is-none-placeholder") ? "この中にはない" : opt;
-      btn.onclick = () => checkAnswer(actualVal);
-      optsDiv.appendChild(btn);
-    });
-
-    updateStats();
-  }
-
-  function checkAnswer(selected) {
-    totalCount++;
-    const isCorrect = selected === currentCorrectAnswer;
-    if (isCorrect) correctCount++;
-
-    const resultDiv = document.getElementById('result');
-    resultDiv.style.display = 'block';
-    resultDiv.className = 'result ' + (isCorrect ? 'correct' : 'incorrect');
-    
-    let resultHTML = `<strong>${isCorrect ? '正解！' : '不正解...'}</strong>`;
-
-    if (currentCorrectAnswer === "この中にはない") {
-      resultHTML += `<br>本当の正解は「<strong>${currentQ.ans}</strong>」です。`;
-      if (currentQ.exp) {
-        resultHTML += `<br>${currentQ.exp}`;
-      }
-    } else {
-      if (currentQ.exp) {
-        resultHTML += `<br>${currentQ.exp}`;
-      }
-    }
-
-    resultDiv.innerHTML = resultHTML;
-
-    const btns = document.getElementById('options').getElementsByTagName('button');
-    for (let btn of btns) btn.disabled = true;
-
-    document.getElementById('next-btn').style.display = 'block';
-    updateStats();
-  }
-
-  function nextQuestion() {
-    loadQuestion();
-  }
-
-  function updateStats() {
-    document.getElementById('stats').textContent = `問題数: ${questions.length}問 | 正解: ${correctCount}/${totalCount}`;
+  function hideAllViews() {
+    document.getElementById('start-view').style.display = 'none';
+    document.getElementById('quiz-view').style.display = 'none';
+    document.getElementById('result-view').style.display = 'none';
+    document.getElementById('edit-view').style.display = 'none';
   }
 
   init();
