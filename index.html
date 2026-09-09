@@ -126,8 +126,9 @@
   <div id="edit-view" style="display: none;">
     <div class="format-info">
       <strong>【入力フォーマット】</strong><br>
-      <code>問題文, 正解, 解説</code><br>
-      ※選択肢を書く必要はありません。すべての「正解」から自動で共通の選択肢プールが作られます。<br>
+      <code>問題文, 正解, 解説（省略可）</code><br>
+      ※解説がない問題は「問題文, 正解」のみで記述可能です。<br>
+      ※すべての「正解」から自動で共通の選択肢プールが作られます。<br>
       ※たまに選択肢から正解が除外され、「この中にはない」が正解になります。
     </div>
     <textarea id="data-input" placeholder="ここにテキストを貼り付けてください"></textarea>
@@ -140,14 +141,14 @@
 </div>
 
 <script>
-  // 初期サンプルデータ（問題文, 正解, 解説）
-  const defaultCSV = `日本の首都は？,東京,1868年に東京へ改称されました。
+  // 初期サンプルデータ（解説あり・なしが混在可能）
+  const defaultCSV = `日本の首都は？,東京
 「Apple」の意味は？,りんご,バラ科リンゴ属の果実です。
-太陽系で最も大きい惑星は？,木星,直径は地球の約11倍あります。
+太陽系で最も大きい惑星は？,木星
 徳川家康が開いた幕府は？,江戸幕府,1603年に開かれました。
-フランスの首都は？,パリ,セーヌ川の河畔に位置する都市です。
+フランスの首都は？,パリ
 日本の最高峰の山は？,富士山,標高3776mの独立峰です。
-世界で一番広い海洋は？,太平洋,地球の表面積の約3分の1を占めます。`;
+世界で一番広い海洋は？,太平洋`;
 
   let questions = [];
   let answerPool = [];
@@ -177,7 +178,8 @@
       if (cols.length >= 2) {
         const q = cols[0].trim();
         const ans = cols[1].trim();
-        const exp = cols[2] ? cols[2].trim() : "解説はありません。";
+        // 解説がある場合のみ取得、無ければ空文字にする
+        const exp = (cols[2] && cols[2].trim()) ? cols[2].trim() : "";
 
         questions.push({ q, ans, exp });
         if (!answerPool.includes(ans)) {
@@ -298,12 +300,20 @@
     resultDiv.style.display = 'block';
     resultDiv.className = 'result ' + (isCorrect ? 'correct' : 'incorrect');
     
-    let expMsg = currentQ.exp;
+    let resultHTML = `<strong>${isCorrect ? '正解！' : '不正解...'}</strong>`;
+
     if (currentCorrectAnswer === "この中にはない") {
-      expMsg = `本当の正解は「<strong>${currentQ.ans}</strong>」です。<br>${currentQ.exp}`;
+      resultHTML += `<br>本当の正解は「<strong>${currentQ.ans}</strong>」です。`;
+      if (currentQ.exp) {
+        resultHTML += `<br>${currentQ.exp}`;
+      }
+    } else {
+      if (currentQ.exp) {
+        resultHTML += `<br>${currentQ.exp}`;
+      }
     }
 
-    resultDiv.innerHTML = `<strong>${isCorrect ? '正解！' : '不正解...'}</strong><br>${expMsg}`;
+    resultDiv.innerHTML = resultHTML;
 
     const btns = document.getElementById('options').getElementsByTagName('button');
     for (let btn of btns) btn.disabled = true;
