@@ -2412,11 +2412,11 @@ zealous	熱心な；熱狂的な`;
 
     let initialData = defaultCSV;
 
-    // 保存済みの編集内容があれば、その内容をそのまま使う。
-    // 初回アクセス時や無効なデータの場合だけ、埋め込みの1900問を使う。
-    if (savedData !== null) {
+    // 保存データを使う場合も「1900問すべてある場合だけ」採用する。
+    // それ以外（古い200/201問データなど）は自動的に破棄する。
+    if (savedVersion === DATA_VERSION && savedData !== null) {
       parseAndSetQuestions(savedData);
-      if (questions.length > 0) {
+      if (questions.length === EXPECTED_QUESTION_COUNT) {
         initialData = savedData;
       } else {
         localStorage.removeItem('user_quiz_data');
@@ -2424,11 +2424,366 @@ zealous	熱心な；熱狂的な`;
         parseAndSetQuestions(defaultCSV);
       }
     } else {
-      parseAndSetQuestions(defaultCSV);
+      localStorage.removeItem('user_quiz_data');
       localStorage.setItem('user_quiz_data_version', DATA_VERSION);
     }
 
-      showStartView();
+    document.getElementById('data-input').value = initialData;
+    parseAndSetQuestions(initialData);
+
+    if (questions.length !== EXPECTED_QUESTION_COUNT) {
+      alert(`内蔵データの読み込みエラー：${EXPECTED_QUESTION_COUNT}問のはずが ${questions.length}問です。HTMLファイルが最新版か確認してください。`);
+    }
+
+    showStartView();
+  }
+
+  function adjustSize(delta) {
+    currentScale += delta;
+    if (currentScale < 70) currentScale = 70;
+    if (currentScale > 150) currentScale = 150;
+    localStorage.setItem('user_quiz_scale', currentScale);
+    applyScale();
+  }
+
+  function applyScale() {
+    const card = document.getElementById('app-card');
+    card.style.zoom = currentScale / 100;
+    document.getElementById('size-disp').textContent = `${currentScale}%`;
+  }
+
+  function parseAndSetQuestions(text) {
+    // Windows(CRLF) / Mac / Unixの改行をすべて統一
+    const normalizedText = String(text ?? '')
+      .replace(/^\uFEFF/, '')
+      .replace(/\r\n?/g, '\n');
+
+    const lines = normalizedText.split('\n');
+    questions = [];
+    answerPool = [];
+    questionPool = [];
+
+    let count = 0;
+    let invalidCount = 0;
+
+    lines.forEach((rawLine) => {
+      const line = rawLine.trim();
+      if (!line) return;
+
+      // タブ区切りを最優先。なければ最初のカンマだけを区切りとして使用する。
+      // これにより、解説中のカンマがあっても問題・正解が崩れない。
+      let q = '';
+      let ans = '';
+      let exp = '';
+
+      if (line.includes('\t')) {
+        const cols = line.split('\t');
+        q = (cols[0] || '').trim();
+        ans = (cols[1] || '').trim();
+        exp = cols.slice(2).join('\t').trim();
+      } else {
+        const firstComma = line.indexOf(',');
+        if (firstComma >= 0) {
+          q = line.slice(0, firstComma).trim();
+          const rest = line.slice(firstComma + 1);
+          const secondComma = rest.indexOf(',');
+          if (secondComma >= 0) {
+            ans = rest.slice(0, secondComma).trim();
+            exp = rest.slice(secondComma + 1).trim();
+          } else {
+            ans = rest.trim();
+          }
+        }
+      }
+
+      if (q && ans) {
+        count++;
+        questions.push({ id: count, q, ans, exp });
+        if (!answerPool.includes(ans)) answerPool.push(ans);
+        if (!questionPool.includes(q)) questionPool.push(q);
+      } else {
+        invalidCount++;
+      }
+    });
+
+    // 出題範囲の上限は「実際に読み込めた問題数」から自動設定。200問固定にはしない。
+    const rangeEndInput = document.getElementById('range-end-input');
+    if (rangeEndInput) {
+      rangeEndInput.placeholder = count > 0 ? count : '';
+      rangeEndInput.removeAttribute('max');
+      rangeEndInput.value = count > 0 ? count : '';
+    }
+    const rangeStartInput = document.getElementById('range-start-input');
+    if (rangeStartInput) {
+      rangeStartInput.removeAttribute('max');
+    }
+
+    console.log(`[Quiz] ${count}問を読み込みました。無効行: ${invalidCount}`);
+  }
+
+  function shuffle(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // タイマー処理
+  function startTimer() {
+    startTime = Date.now();
+    updateTimerDisplay();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimerDisplay, 1000);
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+  }
+
+  function updateTimerDisplay() {
+    const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+    const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+    const secs = String(elapsedSec % 60).padStart(2, '0');
+    totalElapsedStr = `${mins}:${secs}`;
+    document.getElementById('quiz-timer').textContent = `⏱️ ${totalElapsedStr}`;
+  }
+
+  function showStartView() {
+    stopTimer();
+    hideAllViews();
+    document.getElementById('start-view').style.display = 'block';
+    document.getElementById('header-title').textContent = "ランダム問題集";
+    const ok = questions.length === EXPECTED_QUESTION_COUNT;
+    document.getElementById('total-registered-info').textContent =
+      ok
+        ? `（登録問題数: 全 ${EXPECTED_QUESTION_COUNT} 問 ✓）`
+        : `（登録問題数: ${questions.length} 問 / 期待値 ${EXPECTED_QUESTION_COUNT} 問）`;
+  }
+
+  function selectQuizMode(mode, btn) {
+    quizMode = mode;
+    document.querySelectorAll('.mode-select-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+  }
+
+  function selectCount(count, btn) {
+    selectedCount = count;
+    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('custom-count-input').value = '';
+  }
+
+  function onCustomInput(input) {
+    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+    const val = parseInt(input.value, 10);
+    if (!isNaN(val) && val > 0) {
+      selectedCount = val;
+    }
+  }
+
+  function startQuiz() {
+    if (questions.length === 0) {
+      alert("問題が登録されていません。「⚙️ 問題の編集」から問題を追加してください。");
+      return;
+    }
+
+    // 出題範囲の取得
+    let rangeStart = parseInt(document.getElementById('range-start-input').value, 10);
+    let rangeEnd = parseInt(document.getElementById('range-end-input').value, 10);
+
+    if (isNaN(rangeStart) || rangeStart < 1) rangeStart = 1;
+    if (isNaN(rangeEnd) || rangeEnd > questions.length) rangeEnd = questions.length;
+
+    if (rangeStart > rangeEnd) {
+      alert(`範囲の指定が正しくありません。(No.${rangeStart} 〜 No.${rangeEnd})`);
+      return;
+    }
+
+    // 指定範囲の問題のみを抽出
+    const targetRangeQuestions = questions.filter(q => q.id >= rangeStart && q.id <= rangeEnd);
+
+    if (targetRangeQuestions.length === 0) {
+      alert("指定された範囲内に問題が存在しません。");
+      return;
+    }
+
+    // 出題数の決定
+    const customInput = document.getElementById('custom-count-input');
+    const customVal = parseInt(customInput.value, 10);
+
+    let targetCount = selectedCount;
+    if (!isNaN(customVal) && customVal > 0) {
+      targetCount = customVal;
+    }
+
+    if (targetCount === 0) {
+      targetCount = targetRangeQuestions.length;
+    }
+
+    const limit = Math.min(targetCount, targetRangeQuestions.length);
+    
+    const shuffled = shuffle(targetRangeQuestions);
+    sessionQuestions = shuffled.slice(0, limit);
+    
+    currentStep = 0;
+    historyData = [];
+
+    hideAllViews();
+    document.getElementById('quiz-view').style.display = 'block';
+    startTimer();
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    document.getElementById('overlay-result').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+
+    const qTotal = sessionQuestions.length;
+    const qCurrent = currentStep + 1;
+    const isNormal = (quizMode === 'normal');
+    
+    document.getElementById('quiz-progress-text').textContent = `第 ${qCurrent} 問 / 全 ${qTotal} 問`;
+    document.getElementById('quiz-mode-text').textContent = isNormal ? "通常モード" : "逆出題モード";
+    document.getElementById('progress-bar').style.width = `${((qCurrent - 1) / qTotal) * 100}%`;
+
+    const currentQ = sessionQuestions[currentStep];
+    
+    const promptText = isNormal ? currentQ.q : currentQ.ans;
+    const targetAns = isNormal ? currentQ.ans : currentQ.q;
+    const currentPool = isNormal ? answerPool : questionPool;
+
+    // 問題番号(No.X)と問題文を表示
+    document.getElementById('q-number-tag').textContent = `No. ${currentQ.id}`;
+    document.getElementById('q-text').textContent = promptText;
+
+    const dummyPool = currentPool.filter(item => item !== targetAns);
+    const makeNoneCorrect = (dummyPool.length >= 4) && (Math.random() < 0.25);
+
+    let topFourOpts = [];
+    if (makeNoneCorrect) {
+      const shuffledDummies = shuffle(dummyPool);
+      topFourOpts = shuffledDummies.slice(0, 4);
+      currentCorrectAnswer = "この中にはない";
+    } else {
+      currentCorrectAnswer = targetAns;
+      const shuffledDummies = shuffle(dummyPool);
+      const neededDummies = Math.min(3, shuffledDummies.length);
+      const chosenDummies = shuffledDummies.slice(0, neededDummies);
+      topFourOpts = shuffle([targetAns, ...chosenDummies]);
+    }
+
+    const mainOptsDiv = document.getElementById('main-options');
+    const subOptsDiv = document.getElementById('sub-options');
+    mainOptsDiv.innerHTML = '';
+    subOptsDiv.innerHTML = '';
+    
+    // 上部4択
+    topFourOpts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn main-opt';
+      btn.textContent = opt;
+      btn.onclick = () => checkAnswer(opt);
+      mainOptsDiv.appendChild(btn);
+    });
+
+    // 下部補助ボタン
+    const dontKnowBtn = document.createElement('button');
+    dontKnowBtn.className = 'opt-btn sub-opt';
+    dontKnowBtn.textContent = 'わからない';
+    dontKnowBtn.onclick = () => checkAnswer('わからない');
+    subOptsDiv.appendChild(dontKnowBtn);
+
+    const noneBtn = document.createElement('button');
+    noneBtn.className = 'opt-btn sub-opt';
+    noneBtn.textContent = 'この中にはない';
+    noneBtn.onclick = () => checkAnswer('この中にはない');
+    subOptsDiv.appendChild(noneBtn);
+  }
+
+  function checkAnswer(selected) {
+    const currentQ = sessionQuestions[currentStep];
+    const isNormal = (quizMode === 'normal');
+    const promptText = isNormal ? currentQ.q : currentQ.ans;
+    const realAns = isNormal ? currentQ.ans : currentQ.q;
+    
+    const isCorrect = (selected === 'わからない') ? false : (selected === currentCorrectAnswer);
+
+    historyData.push({
+      qId: currentQ.id,
+      promptText: promptText,
+      realAns: realAns,
+      exp: currentQ.exp,
+      selected: selected,
+      correctAnswer: currentCorrectAnswer,
+      isCorrect: isCorrect
+    });
+
+    const overlayDiv = document.getElementById('overlay-result');
+
+    // 「この中にはない」を選択した場合のみ、4択エリアに被せる形で正解/不正解を表示
+    if (selected === 'この中にはない') {
+      overlayDiv.style.display = 'flex';
+      overlayDiv.className = 'overlay-result ' + (isCorrect ? 'correct' : 'incorrect');
+      
+      let resultHTML = `<div style="font-size: 22px; font-weight: bold; margin-bottom: 6px;">${isCorrect ? '⭕ 正解！' : '❌ 不正解...'}</div>`;
+      
+      if (isCorrect) {
+        resultHTML += `<div style="font-size: 16px;">本当の正解は「<span class="ans-highlight">${realAns}</span>」です。</div>`;
+      } else {
+        resultHTML += `<div style="font-size: 16px;">正解は「<span class="ans-highlight">${currentCorrectAnswer}</span>」です。</div>`;
+      }
+
+      if (currentQ.exp) {
+        resultHTML += `<div style="margin-top: 8px; font-size: 14px; color: #555;">${currentQ.exp}</div>`;
+      }
+
+      overlayDiv.innerHTML = resultHTML;
+    } else {
+      overlayDiv.style.display = 'none';
+    }
+
+    // 回答後の各選択肢ボタンの表示制御
+    const mainBtns = document.getElementById('main-options').getElementsByTagName('button');
+    const subBtns = document.getElementById('sub-options').getElementsByTagName('button');
+    const allBtns = [...mainBtns, ...subBtns];
+
+    for (let btn of allBtns) {
+      btn.disabled = true;
+      const isThisBtnCorrect = (btn.textContent === currentCorrectAnswer);
+
+      if (isThisBtnCorrect) {
+        btn.style.background = "#d4edda";
+        btn.style.borderColor = "#28a745";
+        btn.style.color = "#155724";
+      } else if (!isCorrect && btn.textContent === selected) {
+        btn.style.background = "#f8d7da";
+        btn.style.borderColor = "#dc3545";
+        btn.style.color = "#721c24";
+      } else {
+        btn.style.opacity = "0.4";
+      }
+    }
+
+    const nextBtn = document.getElementById('next-btn');
+    nextBtn.textContent = (currentStep + 1 === sessionQuestions.length) ? "結果を見る" : "次の問題へ";
+    nextBtn.style.display = 'block';
+  }
+
+  function nextQuestion() {
+    currentStep++;
+    if (currentStep < sessionQuestions.length) {
+      loadQuestion();
+    } else {
+      showResultView();
+    }
+  }
+
+  function interruptQuiz() {
+    if (historyData.length === 0) {
+      if (confirm("まだ1問も回答していません。クイズを終了してスタート画面に戻りますか？")) {
+        showStartView();
       }
       return;
     }
@@ -2516,12 +2871,17 @@ zealous	熱心な；熱狂的な`;
     const rawText = document.getElementById('data-input').value;
     parseAndSetQuestions(rawText);
 
-    if (questions.length > 0) {
-      // 初期状態は1900問だが、編集後は問題数が変わっていても保存できる。
+    if (questions.length === EXPECTED_QUESTION_COUNT) {
       localStorage.setItem('user_quiz_data', rawText);
       localStorage.setItem('user_quiz_data_version', DATA_VERSION);
       alert(`問題データを更新しました！\n読み込み件数: ${questions.length}問`);
       toggleEditMode();
+    } else if (questions.length > 0) {
+      // 1900問未満の編集データを保存すると、次回起動時に再び欠落するため保存しない。
+      alert(`保存できません。現在 ${questions.length}問です。\nこのクイズは ${EXPECTED_QUESTION_COUNT}問のデータを使用します。`);
+      parseAndSetQuestions(defaultCSV);
+      document.getElementById('data-input').value = defaultCSV;
+      showStartView();
     } else {
       alert("有効な問題データがありません。正しいフォーマットで入力してください。");
     }
