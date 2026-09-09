@@ -3,6 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Safari / GitHub Pages cache対策: 古いService WorkerとCache Storageを一度だけ解除 -->
+  <script>
+    (async function () {
+      const BUILD_VERSION = "2026-09-10-1900-v3";
+      const RESET_KEY = "quiz_cache_reset_" + BUILD_VERSION;
+      try {
+        if (!sessionStorage.getItem(RESET_KEY)) {
+          sessionStorage.setItem(RESET_KEY, "1");
+          let changed = false;
+
+          if ("serviceWorker" in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+              await registration.unregister();
+              changed = true;
+            }
+          }
+
+          if ("caches" in window) {
+            const cacheNames = await caches.keys();
+            for (const cacheName of cacheNames) {
+              await caches.delete(cacheName);
+              changed = true;
+            }
+          }
+
+          // キャッシュされた旧HTMLを避けるため、初回だけクエリ付きURLへ移動
+          if (changed && !location.search.includes("cachebust=")) {
+            const separator = location.search ? "&" : "?";
+            location.replace(location.href + separator + "cachebust=" + Date.now());
+          }
+        }
+      } catch (e) {
+        console.warn("Cache reset skipped:", e);
+      }
+    })();
+  </script>
   <title>ランダム問題集</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4A90E2">
@@ -474,8 +511,21 @@
     }
     applyScale();
 
+    // 問題データは「現在のHTMLに埋め込まれた最新版」を優先する。
+    // Safariに残った古い200問などのlocalStorageデータで上書きされないようにする。
+    const DATA_VERSION = "1900-v3";
+    const savedVersion = localStorage.getItem('user_quiz_data_version');
     const savedData = localStorage.getItem('user_quiz_data');
-    const initialData = savedData !== null ? savedData : defaultCSV;
+
+    let initialData = defaultCSV;
+    if (savedVersion === DATA_VERSION && savedData !== null) {
+      initialData = savedData;
+    } else {
+      // 古い保存データは無効化して最新版へ切り替える
+      localStorage.removeItem('user_quiz_data');
+      localStorage.setItem('user_quiz_data_version', DATA_VERSION);
+    }
+
     document.getElementById('data-input').value = initialData;
     parseAndSetQuestions(initialData);
     showStartView();
@@ -496,40 +546,72 @@
   }
 
   function parseAndSetQuestions(text) {
-    const lines = text.trim().split('\n');
+    // Windows(CRLF) / Mac / Unixの改行をすべて統一
+    const normalizedText = String(text ?? '')
+      .replace(/^\uFEFF/, '')
+      .replace(/\r\n?/g, '\n');
+
+    const lines = normalizedText.split('\n');
     questions = [];
     answerPool = [];
     questionPool = [];
 
     let count = 0;
-    lines.forEach(line => {
-      if (!line.trim()) return;
-      const cols = line.includes('\t') ? line.split('\t') : line.split(',');
-      
-      if (cols.length >= 2) {
-        count++;
-        const q = cols[0].trim();
-        const ans = cols[1].trim();
-        const exp = (cols[2] && cols[2].trim()) ? cols[2].trim() : "";
+    let invalidCount = 0;
 
-        // 自動的に1から順番に問題番号(id)を振り分け
+    lines.forEach((rawLine) => {
+      const line = rawLine.trim();
+      if (!line) return;
+
+      // タブ区切りを最優先。なければ最初のカンマだけを区切りとして使用する。
+      // これにより、解説中のカンマがあっても問題・正解が崩れない。
+      let q = '';
+      let ans = '';
+      let exp = '';
+
+      if (line.includes('\t')) {
+        const cols = line.split('\t');
+        q = (cols[0] || '').trim();
+        ans = (cols[1] || '').trim();
+        exp = cols.slice(2).join('\t').trim();
+      } else {
+        const firstComma = line.indexOf(',');
+        if (firstComma >= 0) {
+          q = line.slice(0, firstComma).trim();
+          const rest = line.slice(firstComma + 1);
+          const secondComma = rest.indexOf(',');
+          if (secondComma >= 0) {
+            ans = rest.slice(0, secondComma).trim();
+            exp = rest.slice(secondComma + 1).trim();
+          } else {
+            ans = rest.trim();
+          }
+        }
+      }
+
+      if (q && ans) {
+        count++;
         questions.push({ id: count, q, ans, exp });
         if (!answerPool.includes(ans)) answerPool.push(ans);
         if (!questionPool.includes(q)) questionPool.push(q);
+      } else {
+        invalidCount++;
       }
     });
 
-    // 出題範囲入力ボックスの初期上限を設定
+    // 出題範囲の上限は「実際に読み込めた問題数」から自動設定。200問固定にはしない。
     const rangeEndInput = document.getElementById('range-end-input');
     if (rangeEndInput) {
       rangeEndInput.placeholder = count > 0 ? count : '';
-      rangeEndInput.max = count;
+      rangeEndInput.removeAttribute('max');
       rangeEndInput.value = count > 0 ? count : '';
     }
     const rangeStartInput = document.getElementById('range-start-input');
     if (rangeStartInput) {
-      rangeStartInput.max = count;
+      rangeStartInput.removeAttribute('max');
     }
+
+    console.log(`[Quiz] ${count}問を読み込みました。無効行: ${invalidCount}`);
   }
 
   function shuffle(array) {
@@ -880,7 +962,8 @@
 
     if (questions.length > 0) {
       localStorage.setItem('user_quiz_data', rawText);
-      alert("問題データを更新しました！");
+      localStorage.setItem('user_quiz_data_version', "1900-v3");
+      alert(`問題データを更新しました！\n読み込み件数: ${questions.length}問`);
       toggleEditMode();
     } else {
       alert("有効な問題データがありません。正しいフォーマットで入力してください。");
@@ -890,6 +973,7 @@
   function clearAllData() {
     if (confirm("登録されている問題をすべて消去しますか？")) {
       localStorage.removeItem('user_quiz_data');
+      localStorage.removeItem('user_quiz_data_version');
       document.getElementById('data-input').value = '';
       questions = [];
       answerPool = [];
@@ -907,9 +991,8 @@
 
   init();
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
+  // このアプリではService Workerを使用しません。
+  // GitHub Pages + Safariで古いJavaScriptが残る問題を防ぎます。
 </script>
 
 </body>
