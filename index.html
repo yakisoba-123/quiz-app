@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ランダム問題集</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4A90E2">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f5f5f7;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .stats { color: #666; font-size: 14px; margin-bottom: 12px; }
+    .question { font-size: 20px; font-weight: bold; margin-bottom: 20px; }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    button {
+      padding: 14px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #f8f9fa;
+      cursor: pointer;
+      text-align: left;
+    }
+    button:active { background: #e2e8f0; }
+    .result { margin-top: 20px; padding: 12px; border-radius: 8px; display: none; }
+    .correct { background: #d4edda; color: #155724; }
+    .incorrect { background: #f8d7da; color: #721c24; }
+    .next-btn {
+      margin-top: 16px;
+      width: 100%;
+      background: #007aff;
+      color: white;
+      text-align: center;
+      font-weight: bold;
+      border: none;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="stats" id="stats">出題準備中...</div>
+  <div class="question" id="question">問題文がここに入ります</div>
+  <div class="options" id="options"></div>
+  <div class="result" id="result"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題へ</button>
+</div>
+
+<script>
+  // ★ここに好きな問題を追加・編集できます★
+  const questions = [
+    {
+      q: "日本の首都はどこでしょう？",
+      opts: ["大阪", "東京", "京都", "福岡"],
+      ans: "東京",
+      exp: "1868年に東京と改称され、事実上の首都となりました。"
+    },
+    {
+      q: "「Apple」の意味は？",
+      opts: ["みかん", "ぶどう", "りんご", "バナナ"],
+      ans: "りんご",
+      exp: "バラ科リンゴ属の果実です。"
+    },
+    {
+      q: "太陽系で最も大きい惑星は？",
+      opts: ["火星", "木星", "土星", "海王星"],
+      ans: "木星",
+      exp: "直径は地球の約11倍あります。"
+    }
+  ];
+
+  let currentQ = null;
+  let totalCount = 0;
+  let correctCount = 0;
+
+  function loadQuestion() {
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+    
+    // ランダムに1問選択
+    const randomIndex = Math.floor(Math.random() * questions.length);
+    currentQ = questions[randomIndex];
+
+    document.getElementById('question').textContent = currentQ.q;
+    
+    const optsDiv = document.getElementById('options');
+    optsDiv.innerHTML = '';
+    
+    currentQ.opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.textContent = opt;
+      btn.onclick = () => checkAnswer(opt);
+      optsDiv.appendChild(btn);
+    });
+
+    updateStats();
+  }
+
+  function checkAnswer(selected) {
+    totalCount++;
+    const isCorrect = selected === currentQ.ans;
+    if (isCorrect) correctCount++;
+
+    const resultDiv = document.getElementById('result');
+    resultDiv.style.display = 'block';
+    resultDiv.className = 'result ' + (isCorrect ? 'correct' : 'incorrect');
+    resultDiv.innerHTML = `<strong>${isCorrect ? '正解！' : '不正解...'}</strong><br>${currentQ.exp}`;
+
+    // 選択肢ボタンを無効化
+    const btns = document.getElementById('options').getElementsByTagName('button');
+    for (let btn of btns) btn.disabled = true;
+
+    document.getElementById('next-btn').style.display = 'block';
+    updateStats();
+  }
+
+  function nextQuestion() {
+    loadQuestion();
+  }
+
+  function updateStats() {
+    document.getElementById('stats').textContent = `解答数: ${totalCount} | 正解数: ${correctCount}`;
+  }
+
+  // 初回読み込み
+  loadQuestion();
+
+  // PWA用のService Worker登録
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
+
+</body>
+</html>
