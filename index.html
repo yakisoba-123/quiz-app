@@ -69,8 +69,24 @@
 
     /* スタート画面 */
     .start-box { text-align: center; padding: 10px 0; }
+    
+    .section-label {
+      font-size: 13px; color: #666; font-weight: bold; margin-bottom: 6px; text-align: left;
+    }
+
+    /* モード切替 */
+    .mode-selector {
+      display: flex; justify-content: center; gap: 8px; margin-bottom: 16px;
+    }
+    .mode-select-btn {
+      flex: 1; padding: 10px 8px; border: 1px solid #007aff; background: #fff;
+      color: #007aff; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px;
+    }
+    .mode-select-btn.active { background: #007aff; color: white; }
+
+    /* 問題数選択 */
     .count-selector {
-      display: flex; justify-content: center; gap: 8px; margin: 16px 0 12px; flex-wrap: wrap;
+      display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
     }
     .count-btn {
       padding: 10px 16px; border: 1px solid #007aff; background: #fff;
@@ -136,9 +152,17 @@
 
   <!-- 1. スタート画面 -->
   <div id="start-view" class="start-box">
-    <h3>回答する問題数を選んでください</h3>
-    <div id="total-registered-info" style="color: #666; font-size: 14px;"></div>
+    <div id="total-registered-info" style="color: #666; font-size: 14px; margin-bottom: 16px;"></div>
+
+    <!-- モード選択 -->
+    <div class="section-label">出題モード</div>
+    <div class="mode-selector">
+      <button class="mode-select-btn active" onclick="selectQuizMode('normal', this)">通常（問題 ➔ 答え）</button>
+      <button class="mode-select-btn" onclick="selectQuizMode('reverse', this)">逆出題（答え ➔ 問題）</button>
+    </div>
     
+    <!-- 問題数選択 -->
+    <div class="section-label">出題数</div>
     <div class="count-selector">
       <button class="count-btn active" onclick="selectCount(5, this)">5問</button>
       <button class="count-btn" onclick="selectCount(10, this)">10問</button>
@@ -159,7 +183,10 @@
   <!-- 2. クイズ画面 -->
   <div id="quiz-view" style="display: none;">
     <div class="progress-bar-container"><div class="progress-bar" id="progress-bar"></div></div>
-    <div style="font-size: 12px; color: #888; margin-bottom: 8px;" id="quiz-progress-text">第 1 問 / 5問</div>
+    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 8px;">
+      <span id="quiz-progress-text">第 1 問 / 5問</span>
+      <span id="quiz-mode-text" style="font-weight: bold; color: #007aff;">通常モード</span>
+    </div>
     <div class="question" id="question">問題文がここに入ります</div>
     <div class="options" id="options"></div>
     <div class="result" id="result"></div>
@@ -196,7 +223,7 @@
       <strong>【入力フォーマット】</strong><br>
       <code>問題文, 正解, 解説（省略可）</code><br>
       ※解説がない問題は「問題文, 正解」のみで記述可能です。<br>
-      ※すべての「正解」から自動で共通の選択肢プールが作られます。
+      ※「逆出題」選択時は自動的に「正解 ➔ 問題文」で出題されます。
     </div>
     <textarea id="data-input" placeholder="ここにテキストを貼り付けてください"></textarea>
     
@@ -220,9 +247,11 @@
 
   let questions = [];
   let answerPool = [];
+  let questionPool = [];
   
   // クイズセッション用変数
   let sessionQuestions = [];
+  let quizMode = 'normal'; // 'normal' または 'reverse'
   let selectedCount = 5; // 0は「全問」
   let currentStep = 0;
   let historyData = [];
@@ -241,6 +270,7 @@
     const lines = text.trim().split('\n');
     questions = [];
     answerPool = [];
+    questionPool = [];
 
     lines.forEach(line => {
       if (!line.trim()) return;
@@ -252,9 +282,8 @@
         const exp = (cols[2] && cols[2].trim()) ? cols[2].trim() : "";
 
         questions.push({ q, ans, exp });
-        if (!answerPool.includes(ans)) {
-          answerPool.push(ans);
-        }
+        if (!answerPool.includes(ans)) answerPool.push(ans);
+        if (!questionPool.includes(q)) questionPool.push(q);
       }
     });
   }
@@ -269,7 +298,7 @@
     return arr;
   }
 
-  // 画面切り替え（スタート画面へ）
+  // スタート画面表示
   function showStartView() {
     hideAllViews();
     document.getElementById('start-view').style.display = 'block';
@@ -277,6 +306,14 @@
     document.getElementById('total-registered-info').textContent = `（登録問題数: 全 ${questions.length} 問）`;
   }
 
+  // モード選択
+  function selectQuizMode(mode, btn) {
+    quizMode = mode;
+    document.querySelectorAll('.mode-select-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+  }
+
+  // 出題数選択
   function selectCount(count, btn) {
     selectedCount = count;
     document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
@@ -285,7 +322,6 @@
   }
 
   function onCustomInput(input) {
-    // 任意入力欄に文字が入ったらボタンの選択状態を解除する
     document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
     const val = parseInt(input.value, 10);
     if (!isNaN(val) && val > 0) {
@@ -309,7 +345,7 @@
     }
 
     if (targetCount === 0) {
-      targetCount = questions.length; // 0なら全問
+      targetCount = questions.length;
     }
 
     if (!targetCount || targetCount <= 0) {
@@ -317,10 +353,8 @@
       return;
     }
 
-    // 登録数より多い数字が指定された場合は全問題数に制限
     const limit = Math.min(targetCount, questions.length);
     
-    // 問題のシャッフルと抽出
     const shuffled = shuffle(questions);
     sessionQuestions = shuffled.slice(0, limit);
     
@@ -338,16 +372,24 @@
 
     const qTotal = sessionQuestions.length;
     const qCurrent = currentStep + 1;
+    const isNormal = (quizMode === 'normal');
     
-    // プログレスバー & テキスト
+    // ヘッダー情報
     document.getElementById('quiz-progress-text').textContent = `第 ${qCurrent} 問 / 全 ${qTotal} 問`;
+    document.getElementById('quiz-mode-text').textContent = isNormal ? "通常モード" : "逆出題モード";
     document.getElementById('progress-bar').style.width = `${((qCurrent - 1) / qTotal) * 100}%`;
 
     const currentQ = sessionQuestions[currentStep];
-    document.getElementById('question').textContent = currentQ.q;
+    
+    // 出題モードに応じた「問い」と「正解」の設定
+    const promptText = isNormal ? currentQ.q : currentQ.ans;
+    const targetAns = isNormal ? currentQ.ans : currentQ.q;
+    const currentPool = isNormal ? answerPool : questionPool;
 
-    // 選択肢作成
-    const dummyPool = answerPool.filter(item => item !== currentQ.ans);
+    document.getElementById('question').textContent = promptText;
+
+    // ダミー選択肢の抽出
+    const dummyPool = currentPool.filter(item => item !== targetAns);
     const makeNoneCorrect = (dummyPool.length >= 4) && (Math.random() < 0.25);
 
     let selectedOpts = [];
@@ -356,11 +398,11 @@
       selectedOpts = shuffledDummies.slice(0, 4);
       currentCorrectAnswer = "この中にはない";
     } else {
-      currentCorrectAnswer = currentQ.ans;
+      currentCorrectAnswer = targetAns;
       const shuffledDummies = shuffle(dummyPool);
       const neededDummies = Math.min(3, shuffledDummies.length);
       const chosenDummies = shuffledDummies.slice(0, neededDummies);
-      selectedOpts = shuffle([currentQ.ans, ...chosenDummies]);
+      selectedOpts = shuffle([targetAns, ...chosenDummies]);
     }
 
     selectedOpts.push("this-is-none-placeholder");
@@ -380,12 +422,15 @@
 
   function checkAnswer(selected) {
     const currentQ = sessionQuestions[currentStep];
+    const isNormal = (quizMode === 'normal');
+    const promptText = isNormal ? currentQ.q : currentQ.ans;
+    const realAns = isNormal ? currentQ.ans : currentQ.q;
     const isCorrect = selected === currentCorrectAnswer;
 
     // 履歴に保存
     historyData.push({
-      q: currentQ.q,
-      ans: currentQ.ans,
+      promptText: promptText,
+      realAns: realAns,
       exp: currentQ.exp,
       selected: selected,
       correctAnswer: currentCorrectAnswer,
@@ -398,7 +443,7 @@
     
     let resultHTML = `<strong>${isCorrect ? '⭕ 正解！' : '❌ 不正解...'}</strong>`;
     if (currentCorrectAnswer === "この中にはない") {
-      resultHTML += `<br>本当の正解は「<strong>${currentQ.ans}</strong>」です。`;
+      resultHTML += `<br>本当の正解は「<strong>${realAns}</strong>」です。`;
     }
     if (currentQ.exp) {
       resultHTML += `<br>${currentQ.exp}`;
@@ -409,7 +454,6 @@
     const btns = document.getElementById('options').getElementsByTagName('button');
     for (let btn of btns) btn.disabled = true;
 
-    // ボタンテキスト調整（最終問の場合）
     const nextBtn = document.getElementById('next-btn');
     nextBtn.textContent = (currentStep + 1 === sessionQuestions.length) ? "結果を見る" : "次の問題へ";
     nextBtn.style.display = 'block';
@@ -442,7 +486,6 @@
     document.getElementById('count-good').textContent = correctCount;
     document.getElementById('count-all').textContent = total;
 
-    // 最初は「不正解」タブを表示（不正解が0なら「すべて」を表示）
     const firstTab = incorrectCount > 0 ? 'incorrect' : 'all';
     const firstTabBtn = document.querySelectorAll('.tab-btn')[incorrectCount > 0 ? 0 : 2];
     switchTab(firstTab, firstTabBtn);
@@ -473,14 +516,14 @@
       if (!item.isCorrect) {
         detailText += `<br>正解: <strong style="color:#d9534f;">${item.correctAnswer}</strong>`;
         if (item.correctAnswer === "この中にはない") {
-          detailText += ` （本当の答え: <strong>${item.ans}</strong>）`;
+          detailText += ` （本当の答え: <strong>${item.realAns}</strong>）`;
         }
       }
 
       let expHTML = item.exp ? `<div class="history-exp">${item.exp}</div>` : '';
 
       div.innerHTML = `
-        <div class="history-q">${item.isCorrect ? '⭕' : '❌'} Q. ${item.q}</div>
+        <div class="history-q">${item.isCorrect ? '⭕' : '❌'} Q. ${item.promptText}</div>
         <div class="history-ans">${detailText}</div>
         ${expHTML}
       `;
@@ -520,6 +563,7 @@
       document.getElementById('data-input').value = '';
       questions = [];
       answerPool = [];
+      questionPool = [];
       alert("すべてのデータを消去しました。");
     }
   }
