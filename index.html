@@ -12,145 +12,147 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: #f5f5f7;
       margin: 0;
-      padding: 16px;
+      padding: 24px;
       display: flex;
       justify-content: center;
     }
     .card {
       background: white;
-      border-radius: 16px;
-      padding: 20px;
-      max-width: 500px;
+      border-radius: 24px;
+      padding: 32px;
+      max-width: 750px;
       width: 100%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 24px;
     }
-    .title-logo { font-weight: bold; font-size: 16px; color: #333; }
+    .title-logo { font-weight: bold; font-size: 22px; color: #333; }
     .mode-btn {
       background: #e9e9eb;
       border: none;
-      padding: 6px 12px;
-      border-radius: 14px;
-      font-size: 13px;
+      padding: 10px 18px;
+      border-radius: 18px;
+      font-size: 15px;
       cursor: pointer;
     }
-    .question { font-size: 18px; font-weight: bold; margin-bottom: 16px; line-height: 1.4; }
-    .options { display: flex; flex-direction: column; gap: 8px; }
+    .question { font-size: 26px; font-weight: bold; margin-bottom: 24px; line-height: 1.4; }
+    .options { display: flex; flex-direction: column; gap: 12px; }
     button.opt-btn {
-      padding: 12px;
-      font-size: 15px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
+      padding: 18px;
+      font-size: 20px;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
       background: #f8f9fa;
+      color: #8035e0; /* 選択肢の文字色を紫色に変更 */
+      font-weight: bold;
       cursor: pointer;
       text-align: left;
     }
     button.opt-btn:active { background: #e2e8f0; }
-    .result { margin-top: 16px; padding: 12px; border-radius: 8px; display: none; line-height: 1.4; }
+    .result { margin-top: 24px; padding: 18px; border-radius: 12px; display: none; line-height: 1.5; font-size: 18px; }
     .correct { background: #d4edda; color: #155724; }
     .incorrect { background: #f8d7da; color: #721c24; }
     
-    .btn-group { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-group { display: flex; gap: 12px; margin-top: 18px; }
     .primary-btn {
       flex: 2; background: #007aff; color: white; text-align: center;
-      font-weight: bold; border: none; padding: 12px; border-radius: 10px;
-      font-size: 15px; cursor: pointer;
+      font-weight: bold; border: none; padding: 18px; border-radius: 14px;
+      font-size: 20px; cursor: pointer;
     }
     .danger-btn {
       flex: 1; background: #ff3b30; color: white; text-align: center;
-      font-weight: bold; border: none; padding: 12px; border-radius: 10px;
-      font-size: 15px; cursor: pointer;
+      font-weight: bold; border: none; padding: 18px; border-radius: 14px;
+      font-size: 20px; cursor: pointer;
     }
     .quit-btn {
       width: 100%;
-      margin-top: 12px;
+      margin-top: 18px;
       background: transparent;
       border: 1px solid #ccc;
       color: #666;
-      padding: 10px;
-      border-radius: 10px;
-      font-size: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 16px;
       cursor: pointer;
     }
     .quit-btn:active { background: #f0f0f0; }
 
     /* スタート画面 */
-    .start-box { text-align: center; padding: 10px 0; }
+    .start-box { text-align: center; padding: 12px 0; }
     
     .section-label {
-      font-size: 13px; color: #666; font-weight: bold; margin-bottom: 6px; text-align: left;
+      font-size: 16px; color: #666; font-weight: bold; margin-bottom: 10px; text-align: left;
     }
 
     /* モード切替 */
     .mode-selector {
-      display: flex; justify-content: center; gap: 8px; margin-bottom: 16px;
+      display: flex; justify-content: center; gap: 12px; margin-bottom: 24px;
     }
     .mode-select-btn {
-      flex: 1; padding: 10px 8px; border: 1px solid #007aff; background: #fff;
-      color: #007aff; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px;
+      flex: 1; padding: 14px 10px; border: 2px solid #007aff; background: #fff;
+      color: #007aff; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px;
     }
     .mode-select-btn.active { background: #007aff; color: white; }
 
     /* 問題数選択 */
     .count-selector {
-      display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+      display: flex; justify-content: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
     }
     .count-btn {
-      padding: 10px 16px; border: 1px solid #007aff; background: #fff;
-      color: #007aff; border-radius: 8px; font-weight: bold; cursor: pointer;
+      padding: 14px 22px; border: 2px solid #007aff; background: #fff;
+      color: #007aff; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px;
     }
     .count-btn.active { background: #007aff; color: white; }
 
     .custom-count-box {
-      display: flex; justify-content: center; align-items: center; gap: 8px;
-      margin-bottom: 20px; font-size: 14px; color: #555;
+      display: flex; justify-content: center; align-items: center; gap: 10px;
+      margin-bottom: 28px; font-size: 18px; color: #555;
     }
     .custom-count-input {
-      width: 80px; padding: 8px 10px; border: 1px solid #ccc;
-      border-radius: 8px; text-align: center; font-size: 15px; outline: none;
+      width: 100px; padding: 10px 12px; border: 1px solid #ccc;
+      border-radius: 10px; text-align: center; font-size: 18px; outline: none;
     }
     .custom-count-input:focus { border-color: #007aff; }
 
     /* 結果画面 */
     .summary-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-      text-align: center; margin: 16px 0;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      text-align: center; margin: 24px 0;
     }
     .summary-card {
-      background: #f8f9fa; padding: 12px 8px; border-radius: 10px;
+      background: #f8f9fa; padding: 16px 10px; border-radius: 14px; font-size: 16px;
     }
-    .summary-card .val { font-size: 20px; font-weight: bold; margin-top: 4px; }
-    .tab-group { display: flex; gap: 4px; margin-top: 16px; border-bottom: 2px solid #eee; }
+    .summary-card .val { font-size: 28px; font-weight: bold; margin-top: 6px; }
+    .tab-group { display: flex; gap: 8px; margin-top: 24px; border-bottom: 2px solid #eee; }
     .tab-btn {
-      flex: 1; padding: 8px 4px; border: none; background: none;
-      font-size: 13px; font-weight: bold; color: #888; cursor: pointer;
+      flex: 1; padding: 12px 6px; border: none; background: none;
+      font-size: 16px; font-weight: bold; color: #888; cursor: pointer;
     }
-    .tab-btn.active { color: #007aff; border-bottom: 2px solid #007aff; margin-bottom: -2px; }
-    .history-list { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; }
+    .tab-btn.active { color: #007aff; border-bottom: 3px solid #007aff; margin-bottom: -2px; }
+    .history-list { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; max-height: 450px; overflow-y: auto; }
     .history-item {
-      padding: 12px; border-radius: 8px; font-size: 14px; border-left: 4px solid #ccc; background: #f9f9f9;
+      padding: 16px; border-radius: 12px; font-size: 17px; border-left: 6px solid #ccc; background: #f9f9f9;
     }
     .history-item.is-correct { border-left-color: #28a745; background: #f0fff4; }
     .history-item.is-incorrect { border-left-color: #dc3545; background: #fff5f5; }
-    .history-q { font-weight: bold; margin-bottom: 4px; }
-    .history-ans { font-size: 13px; color: #444; }
-    .history-exp { font-size: 12px; color: #666; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #ddd; }
+    .history-q { font-weight: bold; margin-bottom: 6px; font-size: 18px; }
+    .history-ans { font-size: 16px; color: #444; line-height: 1.4; }
+    .history-exp { font-size: 15px; color: #666; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #ddd; }
 
     /* 編集画面 */
     textarea {
-      width: 100%; height: 200px; border: 1px solid #ccc;
-      border-radius: 8px; padding: 10px; font-size: 13px; font-family: monospace; margin-bottom: 4px;
+      width: 100%; height: 280px; border: 1px solid #ccc;
+      border-radius: 12px; padding: 14px; font-size: 16px; font-family: monospace; margin-bottom: 8px;
     }
     .format-info {
-      font-size: 12px; color: #666; background: #f0f0f5;
-      padding: 10px; border-radius: 8px; margin-bottom: 12px; line-height: 1.4;
+      font-size: 15px; color: #666; background: #f0f0f5;
+      padding: 14px; border-radius: 12px; margin-bottom: 16px; line-height: 1.5;
     }
-    .progress-bar-container { width: 100%; background: #e9e9eb; height: 6px; border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
+    .progress-bar-container { width: 100%; background: #e9e9eb; height: 10px; border-radius: 5px; margin-bottom: 16px; overflow: hidden; }
     .progress-bar { height: 100%; background: #007aff; width: 0%; transition: width 0.3s; }
   </style>
 </head>
@@ -164,7 +166,7 @@
 
   <!-- 1. スタート画面 -->
   <div id="start-view" class="start-box">
-    <div id="total-registered-info" style="color: #666; font-size: 14px; margin-bottom: 16px;"></div>
+    <div id="total-registered-info" style="color: #666; font-size: 16px; margin-bottom: 20px;"></div>
 
     <!-- モード選択 -->
     <div class="section-label">出題モード</div>
@@ -189,20 +191,20 @@
       <span>問</span>
     </div>
 
-    <button class="primary-btn" style="width: 100%; padding: 14px;" onclick="startQuiz()">スタート！</button>
+    <button class="primary-btn" style="width: 100%; padding: 18px;" onclick="startQuiz()">スタート！</button>
   </div>
 
   <!-- 2. クイズ画面 -->
   <div id="quiz-view" style="display: none;">
     <div class="progress-bar-container"><div class="progress-bar" id="progress-bar"></div></div>
-    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 8px;">
+    <div style="display: flex; justify-content: space-between; font-size: 15px; color: #888; margin-bottom: 12px;">
       <span id="quiz-progress-text">第 1 問 / 5問</span>
       <span id="quiz-mode-text" style="font-weight: bold; color: #007aff;">通常モード</span>
     </div>
     <div class="question" id="question">問題文がここに入ります</div>
     <div class="options" id="options"></div>
     <div class="result" id="result"></div>
-    <button class="primary-btn" id="next-btn" style="display:none; width:100%; margin-top:16px;" onclick="nextQuestion()">次の問題へ</button>
+    <button class="primary-btn" id="next-btn" style="display:none; width:100%; margin-top:20px;" onclick="nextQuestion()">次の問題へ</button>
     
     <!-- 中断ボタン -->
     <button class="quit-btn" id="quit-btn" onclick="interruptQuiz()">⏹️ 中断してここまでの結果を見る</button>
@@ -210,7 +212,7 @@
 
   <!-- 3. 結果画面 -->
   <div id="result-view" style="display: none;">
-    <h3 style="text-align: center; margin-top: 0;" id="result-title">🎉 お疲れ様でした！</h3>
+    <h3 style="text-align: center; margin-top: 0; font-size: 24px;" id="result-title">🎉 お疲れ様でした！</h3>
     
     <div class="summary-grid">
       <div class="summary-card">正答数<div class="val" id="res-correct" style="color: #28a745;">0</div></div>
@@ -227,8 +229,8 @@
 
     <div class="history-list" id="history-list"></div>
 
-    <div style="margin-top: 20px;">
-      <button class="primary-btn" style="width: 100%; margin-bottom: 8px;" onclick="showStartView()">もう一度挑戦する</button>
+    <div style="margin-top: 24px;">
+      <button class="primary-btn" style="width: 100%; margin-bottom: 12px;" onclick="showStartView()">もう一度挑戦する</button>
     </div>
   </div>
 
@@ -266,8 +268,8 @@
   
   // クイズセッション用変数
   let sessionQuestions = [];
-  let quizMode = 'normal'; // 'normal' または 'reverse'
-  let selectedCount = 5; // 0は「全問」
+  let quizMode = 'normal';
+  let selectedCount = 5;
   let currentStep = 0;
   let historyData = [];
   let currentCorrectAnswer = "";
@@ -303,7 +305,6 @@
     });
   }
 
-  // 配列シャッフル
   function shuffle(array) {
     const arr = [...array];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -313,7 +314,6 @@
     return arr;
   }
 
-  // スタート画面表示
   function showStartView() {
     hideAllViews();
     document.getElementById('start-view').style.display = 'block';
@@ -321,14 +321,12 @@
     document.getElementById('total-registered-info').textContent = `（登録問題数: 全 ${questions.length} 問）`;
   }
 
-  // モード選択
   function selectQuizMode(mode, btn) {
     quizMode = mode;
     document.querySelectorAll('.mode-select-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
   }
 
-  // 出題数選択
   function selectCount(count, btn) {
     selectedCount = count;
     document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
@@ -344,7 +342,6 @@
     }
   }
 
-  // クイズ開始
   function startQuiz() {
     if (questions.length === 0) {
       alert("問題が登録されていません。「⚙️ 問題の編集」から問題を追加してください。");
@@ -389,21 +386,18 @@
     const qCurrent = currentStep + 1;
     const isNormal = (quizMode === 'normal');
     
-    // ヘッダー情報
     document.getElementById('quiz-progress-text').textContent = `第 ${qCurrent} 問 / 全 ${qTotal} 問`;
     document.getElementById('quiz-mode-text').textContent = isNormal ? "通常モード" : "逆出題モード";
     document.getElementById('progress-bar').style.width = `${((qCurrent - 1) / qTotal) * 100}%`;
 
     const currentQ = sessionQuestions[currentStep];
     
-    // 出題モードに応じた「問い」と「正解」の設定
     const promptText = isNormal ? currentQ.q : currentQ.ans;
     const targetAns = isNormal ? currentQ.ans : currentQ.q;
     const currentPool = isNormal ? answerPool : questionPool;
 
     document.getElementById('question').textContent = promptText;
 
-    // ダミー選択肢の抽出
     const dummyPool = currentPool.filter(item => item !== targetAns);
     const makeNoneCorrect = (dummyPool.length >= 4) && (Math.random() < 0.25);
 
@@ -442,7 +436,6 @@
     const realAns = isNormal ? currentQ.ans : currentQ.q;
     const isCorrect = selected === currentCorrectAnswer;
 
-    // 履歴に保存
     historyData.push({
       promptText: promptText,
       realAns: realAns,
@@ -483,7 +476,6 @@
     }
   }
 
-  // クイズの中断
   function interruptQuiz() {
     if (historyData.length === 0) {
       if (confirm("まだ1問も回答していません。クイズを終了してスタート画面に戻りますか？")) {
@@ -497,7 +489,6 @@
     }
   }
 
-  // 結果画面の表示
   function showResultView(isInterrupted = false) {
     hideAllViews();
     document.getElementById('result-view').style.display = 'block';
@@ -522,7 +513,6 @@
     switchTab(firstTab, firstTabBtn);
   }
 
-  // 結果画面のタブ切り替え
   function switchTab(type, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
@@ -562,7 +552,6 @@
     });
   }
 
-  // 編集モード切り替え
   function toggleEditMode() {
     isEditMode = !isEditMode;
     if (isEditMode) {
