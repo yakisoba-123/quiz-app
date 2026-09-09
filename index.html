@@ -71,7 +71,7 @@
     }
     button.opt-btn:active { transform: scale(0.98); }
 
-    /* 上部4択（メイン選択肢） */
+    /* 上部4択（メイン選択肢）：大きいサイズ */
     button.main-opt {
       padding: 22px 14px;
       font-size: 22px;
@@ -82,7 +82,7 @@
     }
     button.main-opt:active { background: #f0edfa; }
 
-    /* 下部補助選択肢・回答後非強調用（目立たないスタイル） */
+    /* 下部補助選択肢（わからない・この中にはない） */
     button.sub-opt {
       padding: 10px 8px;
       font-size: 15px;
@@ -555,31 +555,19 @@
       btn.disabled = true;
       const isThisBtnCorrect = (btn.textContent === currentCorrectAnswer);
 
-      if (isCorrect) {
-        if (isThisBtnCorrect) {
-          // 正解ボタン：緑色背景で強調
-          btn.style.background = "#d4edda";
-          btn.style.borderColor = "#28a745";
-          btn.style.color = "#155724";
-        } else {
-          // 正解時の誤り選択肢：「わからない」と同様に目立たないスタイルへ変更
-          btn.className = "opt-btn sub-opt";
-          btn.style.opacity = "0.5";
-        }
+      if (isThisBtnCorrect) {
+        // 正解ボタン：緑色背景で強調
+        btn.style.background = "#d4edda";
+        btn.style.borderColor = "#28a745";
+        btn.style.color = "#155724";
+      } else if (!isCorrect && btn.textContent === selected) {
+        // 間違えて選択したボタン：赤色背景で強調
+        btn.style.background = "#f8d7da";
+        btn.style.borderColor = "#dc3545";
+        btn.style.color = "#721c24";
       } else {
-        // 不正解時：正解を緑、間違えて選んだボタンを赤、その他を薄く表示
-        if (isThisBtnCorrect) {
-          btn.style.background = "#d4edda";
-          btn.style.borderColor = "#28a745";
-          btn.style.color = "#155724";
-        } else if (btn.textContent === selected) {
-          btn.style.background = "#f8d7da";
-          btn.style.borderColor = "#dc3545";
-          btn.style.color = "#721c24";
-        } else {
-          btn.className = "opt-btn sub-opt";
-          btn.style.opacity = "0.5";
-        }
+        // その他の非正解ボタン：サイズは元のまま保持し、透明度だけ下げて非アクティブ化
+        btn.style.opacity = "0.4";
       }
     }
 
