@@ -67,11 +67,11 @@
       justify-content: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       line-height: 1.3;
-      transition: background-color 0.1s, transform 0.05s;
+      transition: all 0.2s ease;
     }
     button.opt-btn:active { transform: scale(0.98); }
 
-    /* 上部4択（メイン選択肢）：サイズを大きく指定 */
+    /* 上部4択（メイン選択肢） */
     button.main-opt {
       padding: 22px 14px;
       font-size: 22px;
@@ -82,7 +82,7 @@
     }
     button.main-opt:active { background: #f0edfa; }
 
-    /* 下部補助選択肢（わからない・この中にはない）：サイズを小さく指定 */
+    /* 下部補助選択肢・回答後非強調用（目立たないスタイル） */
     button.sub-opt {
       padding: 10px 8px;
       font-size: 15px;
@@ -487,7 +487,7 @@
     const optsDiv = document.getElementById('options');
     optsDiv.innerHTML = '';
     
-    // 上部4択 (大きめスタイル main-opt)
+    // 上部4択
     topFourOpts.forEach(opt => {
       const btn = document.createElement('button');
       btn.className = 'opt-btn main-opt';
@@ -496,7 +496,7 @@
       optsDiv.appendChild(btn);
     });
 
-    // 下部補助ボタン (小さめスタイル sub-opt)
+    // 下部補助ボタン
     const dontKnowBtn = document.createElement('button');
     dontKnowBtn.className = 'opt-btn sub-opt';
     dontKnowBtn.textContent = 'わからない';
@@ -549,8 +549,39 @@
 
     resultDiv.innerHTML = resultHTML;
 
+    // 回答後の各選択肢ボタンの表示制御
     const btns = document.getElementById('options').getElementsByTagName('button');
-    for (let btn of btns) btn.disabled = true;
+    for (let btn of btns) {
+      btn.disabled = true;
+      const isThisBtnCorrect = (btn.textContent === currentCorrectAnswer);
+
+      if (isCorrect) {
+        if (isThisBtnCorrect) {
+          // 正解ボタン：緑色背景で強調
+          btn.style.background = "#d4edda";
+          btn.style.borderColor = "#28a745";
+          btn.style.color = "#155724";
+        } else {
+          // 正解時の誤り選択肢：「わからない」と同様に目立たないスタイルへ変更
+          btn.className = "opt-btn sub-opt";
+          btn.style.opacity = "0.5";
+        }
+      } else {
+        // 不正解時：正解を緑、間違えて選んだボタンを赤、その他を薄く表示
+        if (isThisBtnCorrect) {
+          btn.style.background = "#d4edda";
+          btn.style.borderColor = "#28a745";
+          btn.style.color = "#155724";
+        } else if (btn.textContent === selected) {
+          btn.style.background = "#f8d7da";
+          btn.style.borderColor = "#dc3545";
+          btn.style.color = "#721c24";
+        } else {
+          btn.className = "opt-btn sub-opt";
+          btn.style.opacity = "0.5";
+        }
+      }
+    }
 
     const nextBtn = document.getElementById('next-btn');
     nextBtn.textContent = (currentStep + 1 === sessionQuestions.length) ? "結果を見る" : "次の問題へ";
