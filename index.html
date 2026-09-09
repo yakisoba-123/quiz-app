@@ -131,7 +131,16 @@
     }
     button.sub-opt:active { background: #ebebeb; }
     
-    .result { margin-top: 24px; padding: 18px; border-radius: 12px; display: none; line-height: 1.5; font-size: 18px; }
+    /* 正解・不正解結果エリア（「この中にはない」の選択時のみ中央に表示） */
+    .result {
+      margin-top: 24px;
+      padding: 18px;
+      border-radius: 12px;
+      display: none;
+      line-height: 1.5;
+      font-size: 18px;
+      text-align: center;
+    }
     .correct { background: #d4edda; color: #155724; }
     .incorrect { background: #f8d7da; color: #721c24; }
 
@@ -607,32 +616,28 @@
     });
 
     const resultDiv = document.getElementById('result');
-    resultDiv.style.display = 'block';
-    resultDiv.className = 'result ' + (isCorrect ? 'correct' : 'incorrect');
-    
-    let resultHTML = `<div style="font-size: 22px; font-weight: bold; margin-bottom: 6px;">${isCorrect ? '⭕ 正解！' : '❌ 不正解...'}</div>`;
-    
-    if (selected === 'わからない') {
-      resultHTML += `<div>正解は「<span class="ans-highlight">${realAns}</span>」です。</div>`;
-    } else if (selected === 'この中にはない') {
+
+    // 「この中にはない」を選択した場合のみ正解・不正解表示エリアを有効化
+    if (selected === 'この中にはない') {
+      resultDiv.style.display = 'block';
+      resultDiv.className = 'result ' + (isCorrect ? 'correct' : 'incorrect');
+      
+      let resultHTML = `<div style="font-size: 22px; font-weight: bold; margin-bottom: 6px;">${isCorrect ? '⭕ 正解！' : '❌ 不正解...'}</div>`;
+      
       if (isCorrect) {
         resultHTML += `<div>本当の正解は「<span class="ans-highlight">${realAns}</span>」です。</div>`;
       } else {
         resultHTML += `<div>正解は「<span class="ans-highlight">${currentCorrectAnswer}</span>」です。</div>`;
       }
-    } else if (!isCorrect) {
-      if (currentCorrectAnswer === "この中にはない") {
-        resultHTML += `<div>本当の正解は「<span class="ans-highlight">${realAns}</span>」です。</div>`;
-      } else {
-        resultHTML += `<div>正解は「<span class="ans-highlight">${currentCorrectAnswer}</span>」です。</div>`;
+
+      if (currentQ.exp) {
+        resultHTML += `<div style="margin-top: 8px;">${currentQ.exp}</div>`;
       }
-    }
 
-    if (currentQ.exp) {
-      resultHTML += `<div style="margin-top: 8px;">${currentQ.exp}</div>`;
+      resultDiv.innerHTML = resultHTML;
+    } else {
+      resultDiv.style.display = 'none';
     }
-
-    resultDiv.innerHTML = resultHTML;
 
     // 回答後の各選択肢ボタンの表示制御
     const btns = document.getElementById('options').getElementsByTagName('button');
