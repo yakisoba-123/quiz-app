@@ -535,6 +535,12 @@
     
     if (selected === 'わからない') {
       resultHTML += `<br>正解は「<strong>${realAns}</strong>」です。`;
+    } else if (selected === 'この中にはない') {
+      if (isCorrect) {
+        resultHTML += `<br>本当の正解は「<strong>${realAns}</strong>」です。`;
+      } else {
+        resultHTML += `<br>正解は「<strong>${currentCorrectAnswer}</strong>」です。`;
+      }
     } else if (!isCorrect) {
       if (currentCorrectAnswer === "この中にはない") {
         resultHTML += `<br>本当の正解は「<strong>${realAns}</strong>」です。`;
