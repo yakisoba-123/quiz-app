@@ -329,16 +329,6 @@
     .history-q { font-weight: bold; margin-bottom: 6px; font-size: 18px; }
     .history-ans { font-size: 16px; color: #444; line-height: 1.4; }
     .history-exp { font-size: 15px; color: #666; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #ddd; }
-
-    /* 編集画面 */
-    textarea {
-      width: 100%; height: 280px; border: 1px solid #ccc;
-      border-radius: 12px; padding: 14px; font-size: 16px; font-family: monospace; margin-bottom: 8px;
-    }
-    .format-info {
-      font-size: 15px; color: #666; background: #f0f0f5;
-      padding: 14px; border-radius: 12px; margin-bottom: 16px; line-height: 1.5;
-    }
     .progress-bar-container { width: 100%; background: #e9e9eb; height: 10px; border-radius: 5px; margin-bottom: 16px; overflow: hidden; }
     .progress-bar { height: 100%; background: #007aff; width: 0%; transition: width 0.3s; }
   </style>
@@ -355,7 +345,6 @@
         <span class="size-disp" id="size-disp">100%</span>
         <button class="size-btn" onclick="adjustSize(10)">大</button>
       </div>
-      <button class="mode-btn" id="toggle-mode-btn" onclick="toggleEditMode()">⚙️ 問題の編集</button>
     </div>
   </div>
 
@@ -450,23 +439,6 @@
 
     <div style="margin-top: 24px;">
       <button class="primary-btn" style="width: 100%; margin-bottom: 12px;" onclick="showStartView()">もう一度挑戦する</button>
-    </div>
-  </div>
-
-  <!-- 4. 問題入力・編集画面 -->
-  <div id="edit-view" style="display: none;">
-    <div class="format-info">
-      <strong>【入力フォーマット】</strong><br>
-      <code>問題文, 正解, 解説（省略可）</code><br>
-      ※上から順に問題番号 (No.1, No.2...) が自動で振られます。<br>
-      ※解説がない問題は「問題文, 正解」のみで記述可能です。<br>
-      ※「逆出題」選択時は自動的に「正解 ➔ 問題文」で出題されます。
-    </div>
-    <textarea id="data-input" placeholder="ここにテキストを貼り付けてください"></textarea>
-    
-    <div class="btn-group">
-      <button class="primary-btn" onclick="saveQuestions()">保存して適用</button>
-      <button class="danger-btn" onclick="clearAllData()">全消去</button>
     </div>
   </div>
 </div>
@@ -2395,7 +2367,7 @@ zealous	熱心な；熱狂的な`;
   let totalElapsedStr = "00:00";
 
   // 全体サイズ調整用変数
-  let currentScale = 100;
+  
 
   function init() {
     // 保存済みサイズの読み込み
@@ -2428,7 +2400,7 @@ zealous	熱心な；熱狂的な`;
       localStorage.setItem('user_quiz_data_version', DATA_VERSION);
     }
 
-    document.getElementById('data-input').value = initialData;
+    
     parseAndSetQuestions(initialData);
 
     if (questions.length !== EXPECTED_QUESTION_COUNT) {
@@ -2854,56 +2826,13 @@ zealous	熱心な；熱狂的な`;
       listDiv.appendChild(div);
     });
   }
+  
 
-  function toggleEditMode() {
-    isEditMode = !isEditMode;
-    if (isEditMode) {
-      hideAllViews();
-      document.getElementById('edit-view').style.display = 'block';
-      document.getElementById('toggle-mode-btn').textContent = '✕ 閉じる';
-    } else {
-      showStartView();
-      document.getElementById('toggle-mode-btn').textContent = '⚙️ 問題の編集';
-    }
-  }
-
-  function saveQuestions() {
-    const rawText = document.getElementById('data-input').value;
-    parseAndSetQuestions(rawText);
-
-    if (questions.length === EXPECTED_QUESTION_COUNT) {
-      localStorage.setItem('user_quiz_data', rawText);
-      localStorage.setItem('user_quiz_data_version', DATA_VERSION);
-      alert(`問題データを更新しました！\n読み込み件数: ${questions.length}問`);
-      toggleEditMode();
-    } else if (questions.length > 0) {
-      // 1900問未満の編集データを保存すると、次回起動時に再び欠落するため保存しない。
-      alert(`保存できません。現在 ${questions.length}問です。\nこのクイズは ${EXPECTED_QUESTION_COUNT}問のデータを使用します。`);
-      parseAndSetQuestions(defaultCSV);
-      document.getElementById('data-input').value = defaultCSV;
-      showStartView();
-    } else {
-      alert("有効な問題データがありません。正しいフォーマットで入力してください。");
-    }
-  }
-
-  function clearAllData() {
-    if (confirm("登録されている問題をすべて消去しますか？")) {
-      localStorage.removeItem('user_quiz_data');
-      localStorage.removeItem('user_quiz_data_version');
-      document.getElementById('data-input').value = '';
-      questions = [];
-      answerPool = [];
-      questionPool = [];
-      alert("すべてのデータを消去しました。");
-    }
-  }
 
   function hideAllViews() {
     document.getElementById('start-view').style.display = 'none';
     document.getElementById('quiz-view').style.display = 'none';
     document.getElementById('result-view').style.display = 'none';
-    document.getElementById('edit-view').style.display = 'none';
   }
 
   init();
