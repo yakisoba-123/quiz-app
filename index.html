@@ -2695,17 +2695,27 @@ zealous	熱心な；熱狂的な`;
     const overlayDiv = document.getElementById('overlay-result');
 
     // 「この中にはない」を選択した場合のみ、4択エリアに被せる形で正解/不正解を表示
-    if (selected === 'この中にはない') {
+    if (
+  selected === 'この中にはない' ||
+  (!isCorrect && currentCorrectAnswer === 'この中にはない')
+) {
       overlayDiv.style.display = 'flex';
       overlayDiv.className = 'overlay-result ' + (isCorrect ? 'correct' : 'incorrect');
       
       let resultHTML = `<div style="font-size: 22px; font-weight: bold; margin-bottom: 6px;">${isCorrect ? '⭕ 正解！' : '❌ 不正解...'}</div>`;
       
-      if (isCorrect) {
-        resultHTML += `<div style="font-size: 16px;">本当の正解は「<span class="ans-highlight">${realAns}</span>」です。</div>`;
-      } else {
-        resultHTML += `<div style="font-size: 16px;">正解は「<span class="ans-highlight">${currentCorrectAnswer}</span>」です。</div>`;
-      }
+      
+if (isCorrect) {
+  resultHTML += `<div style="font-size: 16px;">本当の正解は「<span class="ans-highlight">${realAns}</span>」です。</div>`;
+} else {
+  const answerToShow =
+    currentCorrectAnswer === 'この中にはない'
+      ? realAns
+      : currentCorrectAnswer;
+
+  resultHTML += `<div style="font-size: 16px;">正解は「<span class="ans-highlight">${answerToShow}</span>」です。</div>`;
+}
+
 
       if (currentQ.exp) {
         resultHTML += `<div style="margin-top: 8px; font-size: 14px; color: #555;">${currentQ.exp}</div>`;
