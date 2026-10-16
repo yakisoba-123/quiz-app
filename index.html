@@ -184,6 +184,26 @@
     button.sub-opt:active { background: #ebebeb; }
     
     /* 4択部分に被せる結果表示オーバーレイ */
+  
+/* 4択を隠すカバー */
+.choices-cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 18px;
+  background: rgba(245, 245, 250, 0.97);
+  z-index: 11;
+  cursor: pointer;
+}
+
+.choices-cover button {
+  padding: 18px 28px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
     .overlay-result {
       position: absolute;
       top: 0;
@@ -403,10 +423,19 @@
     </div>
     
     <!-- 4択エリアと結果オーバーレイの容器 -->
-    <div class="main-options-wrapper">
-      <div class="main-options" id="main-options"></div>
-      <div class="overlay-result" id="overlay-result" style="display: none;"></div>
-    </div>
+    
+<div class="main-options-wrapper">
+  <div class="main-options" id="main-options"></div>
+
+  <!-- 選択肢を表示するためのカバー -->
+  <div class="choices-cover" id="choices-cover" onclick="showChoices()">
+    <button class="primary-btn" type="button">選択肢を見る</button>
+  </div>
+
+  <!-- 正解・解説を表示する部分 -->
+  <div class="overlay-result" id="overlay-result" style="display: none;"></div>
+</div>
+
     
     <!-- 下部補助選択肢エリア -->
     <div class="sub-options" id="sub-options"></div>
@@ -2607,8 +2636,11 @@ zealous	熱心な；熱狂的な`;
     startTimer();
     loadQuestion();
   }
-
+function showChoices() {
+  document.getElementById('choices-cover').style.display = 'none';
+}
   function loadQuestion() {
+    document.getElementById('choices-cover').style.display = 'flex';
     document.getElementById('overlay-result').style.display = 'none';
     document.getElementById('next-btn').style.display = 'none';
 
@@ -2675,6 +2707,7 @@ zealous	熱心な；熱狂的な`;
   }
 
   function checkAnswer(selected) {
+    document.getElementById('choices-cover').style.display = 'none';
     const currentQ = sessionQuestions[currentStep];
     const isNormal = (quizMode === 'normal');
     const promptText = isNormal ? currentQ.q : currentQ.ans;
